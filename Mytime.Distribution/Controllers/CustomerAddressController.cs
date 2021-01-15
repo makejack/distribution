@@ -46,10 +46,12 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("list")]
         public async Task<Result> List()
         {
+            var userId = HttpContext.GetUserId();
             var userAddresses = await _customerAddressRepository.Query()
             .Include(e => e.Province)
             .Include(e => e.City)
             .Include(e => e.Area)
+            .Where(e => e.CustomerId == userId)
             .OrderByDescending(e => e.Id).ToListAsync();
 
             return Result.Ok(_mapper.Map<List<CustomerAddressResponse>>(userAddresses));
@@ -79,7 +81,7 @@ namespace Mytime.Distribution.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<Result> Create([FromBody] WeChatUserAddressCreateRequest request)
+        public async Task<Result> Create([FromBody] CustomerAddressCreateRequest request)
         {
             var userId = HttpContext.GetUserId();
             var userAddress = new CustomerAddress(userId, request.IsDefault, request.PostalCode, request.ProvinceCode, request.CityCode, request.AreaCode, request.DetailInfo, request.TelNumber, request.UserName);
@@ -103,7 +105,7 @@ namespace Mytime.Distribution.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPut]
-        public async Task<Result> Edit([FromBody] WeChatUserAddressEditRequest request)
+        public async Task<Result> Edit([FromBody] CustomerAddressEditRequest request)
         {
             var userAddress = await _customerAddressRepository.FirstOrDefaultAsync(request.Id);
             if (userAddress == null) return Result.Fail(ResultCodes.IdInvalid);

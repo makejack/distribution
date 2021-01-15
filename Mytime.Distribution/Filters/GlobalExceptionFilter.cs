@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,6 +8,11 @@ using Microsoft.Extensions.Logging;
 using Mytime.Distribution.Domain.Entities;
 using Mytime.Distribution.Domain.IRepositories;
 using Mytime.Distribution.Models;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Mytime.Distribution.Events;
+using Mytime.Distribution.Services.SmsContent;
+using Mytime.Distribution.Services;
 
 namespace Mytime.Distribution.Filters
 {
@@ -15,17 +21,23 @@ namespace Mytime.Distribution.Filters
     /// </summary>
     public class GlobalExceptionFilter : IAsyncExceptionFilter
     {
+        private readonly IAdminUserManager _adminUserManager;
         private readonly IRepositoryByInt<ErrorLog> _errorLogRepository;
         private readonly ILogger _logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
+        /// <param name="adminUserManager"></param>
         /// <param name="errorLogRepository"></param>
+        /// <param name="mediator"></param>
         /// <param name="logger"></param>
-        public GlobalExceptionFilter(IRepositoryByInt<ErrorLog> errorLogRepository,
+        public GlobalExceptionFilter(IAdminUserManager adminUserManager,
+                                     IRepositoryByInt<ErrorLog> errorLogRepository,
+                                     IMediator mediator,
                                      ILogger<GlobalExceptionFilter> logger)
         {
+            _adminUserManager = adminUserManager;
             _errorLogRepository = errorLogRepository;
             _logger = logger;
         }
@@ -78,6 +90,8 @@ namespace Mytime.Distribution.Filters
             }
             finally
             {
+                await _adminUserManager.ExceptionNotify();
+
                 //异常已处理
                 context.ExceptionHandled = true;
 

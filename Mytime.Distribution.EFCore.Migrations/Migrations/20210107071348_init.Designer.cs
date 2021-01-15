@@ -45,7 +45,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasMaxLength(512);
 
                     b.Property<byte>("Role")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint unsigned");
 
                     b.Property<string>("Tel")
                         .IsRequired()
@@ -428,10 +428,13 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int?>("ThumbnailImageId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CityDiscount")
+                    b.Property<int>("CityDiscount")
                         .HasColumnType("int");
 
-                    b.Property<int?>("BranchDiscount")
+                    b.Property<int>("BranchDiscount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -874,6 +877,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<string>("TrackingNumber")
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
                         .HasMaxLength(32);
+
+                    b.Property<bool>("IsValid")
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
 

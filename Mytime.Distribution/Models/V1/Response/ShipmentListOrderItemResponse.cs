@@ -1,4 +1,5 @@
 using System;
+using Mytime.Distribution.Domain.Shared;
 
 namespace Mytime.Distribution.Models.V1.Response
 {
@@ -47,6 +48,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// </summary>
         /// <value></value>
         public int Quantity { get; set; }
+        /// <summary>
+        /// 退款状态
+        /// </summary>
+        /// <value></value>
+        public RefundStatus RefundStatus { get; set; }
         /// <summary>
         /// 备注
         /// </summary>

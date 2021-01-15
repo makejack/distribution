@@ -139,8 +139,10 @@ namespace Mytime.Distribution
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IWechatService, WechatService>();
             services.AddScoped<ICustomerManager, CustomerManager>();
             services.AddScoped<IShipmentService, ShipmentService>();
+            services.AddScoped<IAdminUserManager, AdminUserManager>();
 
             services.Configure<Kuaidi100Config>(Configuration.GetSection(nameof(Kuaidi100Config)));
             services.AddScoped<IPackageService, PackageService>();

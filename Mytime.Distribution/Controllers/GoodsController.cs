@@ -58,7 +58,7 @@ namespace Mytime.Distribution.Controllers
             if (limit <= 0)
                 limit = 10;
 
-            var queryable = _goodsRepository.Query().Where(e => e.IsVisible == false);
+            var queryable = _goodsRepository.Query().Where(e => e.IsPublished && !e.IsVisible);
 
             var totalRows = await queryable.CountAsync();
             var goodsList = await queryable

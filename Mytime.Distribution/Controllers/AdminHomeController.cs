@@ -257,7 +257,7 @@ namespace Mytime.Distribution.Controllers
                 Id = e.Key,
                 ChildQuantity = e.Count(),
                 TotalAmount = e.Sum(e => e.Amount)
-            }).OrderByDescending(e => e.TotalAmount).Take(1);
+            }).OrderByDescending(e => e.TotalAmount).Take(10);
 
             var parentIds = childStatistics.Select(e => e.Id);
             var customers = await _customerRepository.Query().Where(e => parentIds.Contains(e.Id)).ToListAsync();

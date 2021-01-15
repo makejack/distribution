@@ -117,14 +117,22 @@ namespace Mytime.Distribution.Controllers
                 Createat = DateTime.Now
             };
 
-            await _withdrawalHistoryRepository.InsertAsync(withdrawalHistory);
+            _withdrawalHistoryRepository.Insert(withdrawalHistory, false);
 
             if (payBankResult.IsSuccess)
             {
-                assets.AvailableAmount -= amount - handlingFee;
-                assets.TotalAssets += amount + handlingFee;
+                assets.AvailableAmount -= (amount + handlingFee);
+                assets.TotalAssets = assets.AvailableAmount + assets.TotalCommission;
+                assets.UpdateTime = DateTime.Now;
 
-                await _assetsRepository.UpdateAsync(assets);
+                using (var transaction = _withdrawalHistoryRepository.BeginTransaction())
+                {
+                    await _withdrawalHistoryRepository.SaveAsync();
+
+                    await _assetsRepository.UpdateAsync(assets);
+
+                    transaction.Commit();
+                }
             }
 
             return Result.Ok(payBankResult);

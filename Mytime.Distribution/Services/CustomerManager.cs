@@ -95,6 +95,13 @@ namespace Mytime.Distribution.Services
                 case PartnerRole.BranchPartner:
                     config = _partnerConfig.Branch;
                     break;
+                default:
+                    config = new PartnerItemConfig
+                    {
+                        FirstCommissionRatio = 0,
+                        CommissionRatio = 0,
+                    };
+                    break;
             }
             return config;
         }

@@ -106,6 +106,7 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("team")]
+        [ProducesResponseType(typeof(List<CustomerTeamResponse>), 200)]
         public async Task<Result> Team([FromQuery] PaginationRequest request)
         {
             var userId = HttpContext.GetUserId();
@@ -119,7 +120,7 @@ namespace Mytime.Distribution.Controllers
             .Select(e => e.Children)
             .ToListAsync();
 
-            return Result.Ok(new PaginationResponse(request.Page, totalRows, _mapper.Map<List<CustomerResponse>>(teams)));
+            return Result.Ok(new PaginationResponse(request.Page, totalRows, _mapper.Map<List<CustomerTeamResponse>>(teams)));
         }
     }
 }

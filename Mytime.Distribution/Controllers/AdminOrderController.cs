@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,9 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mytime.Distribution.Domain.Entities;
 using Mytime.Distribution.Domain.IRepositories;
+using Mytime.Distribution.Domain.Shared;
 using Mytime.Distribution.Models;
 using Mytime.Distribution.Models.V1.Request;
 using Mytime.Distribution.Models.V1.Response;
+using Mytime.Distribution.Services;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -24,17 +27,21 @@ namespace Mytime.Distribution.Controllers
     public class AdminOrderController : ControllerBase
     {
         private readonly IRepositoryByInt<Orders> _orderRepository;
+        private readonly ICustomerManager _customerManager;
         private readonly IMapper _mapper;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="orderRepository"></param>
+        /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public AdminOrderController(IRepositoryByInt<Orders> orderRepository,
+                                    ICustomerManager customerManager,
                                     IMapper mapper)
         {
             _orderRepository = orderRepository;
+            _customerManager = customerManager;
             _mapper = mapper;
         }
 
@@ -70,10 +77,63 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("{id}")]
         public async Task<Result> Get(int id)
         {
-            var order = await _orderRepository.Query().Include(e => e.OrderItems).FirstOrDefaultAsync(e => e.Id == id);
+            var order = await _orderRepository.Query()
+            .Include(e => e.OrderItems)
+            .Include(e => e.OrderBilling)
+            .FirstOrDefaultAsync(e => e.Id == id);
             if (order == null) return Result.Fail(ResultCodes.IdInvalid);
 
             return Result.Ok(_mapper.Map<AdminOrderGetResponse>(order));
+        }
+
+        /// <summary>
+        /// 编辑订单信息
+        /// /// </summary>
+        /// <returns></returns>
+        [HttpPut]
+        public async Task<Result> Edit([FromBody] AdminOrderEditRequest request)
+        {
+            var order = await _orderRepository.Query()
+            .Include(e => e.OrderItems).ThenInclude(e => e.CommissionHistory)
+            .FirstOrDefaultAsync(e => e.Id == request.Id);
+            if (order == null) return Result.Fail(ResultCodes.IdInvalid);
+            var status = new[] { OrderStatus.Closed, OrderStatus.PaymentReceived, OrderStatus.Complete };
+            if (status.Contains(order.OrderStatus)) return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许修改");
+
+            var totalCommission = 0;
+            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
+            if (commissions.Count() > 0)
+            {
+                foreach (var item in commissions)
+                {
+                    if (item.Status != CommissionStatus.Invalidation) continue;
+
+                    item.Status = CommissionStatus.PendingSettlement;
+                    totalCommission += item.Commission;
+                }
+            }
+
+            order.PaymentType = request.PaymentType;
+            order.PaymentMethod = request.PaymentMethod;
+            order.PaymentTime = DateTime.Now;
+            order.PaymentFee = order.TotalWithDiscount;
+
+            _orderRepository.Update(order, false);
+
+            using (var transaction = _orderRepository.BeginTransaction())
+            {
+                await _orderRepository.SaveAsync();
+
+                if (totalCommission > 0)
+                {
+                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
+                    await _customerManager.UpdateAssets(parentId, totalCommission, 0);
+                }
+
+                transaction.Commit();
+            }
+
+            return Result.Ok();
         }
 
         /// <summary>

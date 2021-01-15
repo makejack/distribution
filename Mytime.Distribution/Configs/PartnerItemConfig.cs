@@ -11,14 +11,9 @@ namespace Mytime.Distribution.Configs
         /// <value></value>
         public int FirstCommissionRatio { get; set; }
         /// <summary>
-        /// 次级佣金比例
+        /// 佣金比例
         /// </summary>
         /// <value></value>
-        public int SecondaryCommissionRatio { get; set; }
-        /// <summary>
-        /// 折扣比例
-        /// </summary>
-        /// <value></value>
-        public int DiscountRate { get; set; }
+        public int CommissionRatio { get; set; }
     }
 }

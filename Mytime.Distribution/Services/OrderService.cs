@@ -93,33 +93,30 @@ namespace Mytime.Distribution.Services
             if (!status.Contains(order.OrderStatus))
                 return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许删除");
 
-            order.OrderStatus = OrderStatus.Canceled;
-            order.CancelReason = reason;
-            order.CancelTime = DateTime.Now;
-
-            int? customerId = null;
             var refundCommission = 0;
-            var commissions = order.OrderItems.Select(e => e.CommissionHistory);
-            var commission = commissions.FirstOrDefault();
-            if (commission != null)
+            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
+            if (commissions.Count() > 0)
             {
-                customerId = commission.CustomerId;
-                refundCommission = commissions.Sum(e => e.Commission);
                 foreach (var item in commissions)
                 {
                     item.Status = CommissionStatus.Invalidation;
+                    refundCommission += item.Commission;
                 }
             }
 
+            order.OrderStatus = OrderStatus.Canceled;
+            order.CancelReason = reason;
+            order.CancelTime = DateTime.Now;
             _orderRepository.Update(order, false);
 
             using (var transaction = _orderRepository.BeginTransaction())
             {
                 await _orderRepository.SaveAsync();
 
-                if (customerId.HasValue)
+                if (refundCommission > 0)
                 {
-                    await _customerManager.UpdateAssets(customerId.Value, -refundCommission, 0);
+                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
+                    await _customerManager.UpdateAssets(parentId, -refundCommission, 0);
                 }
 
                 transaction.Commit();

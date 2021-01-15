@@ -49,7 +49,11 @@ namespace Mytime.Distribution.Controllers
             .Include(e => e.PartnerApplyGoods).ThenInclude(e => e.Goods).ThenInclude(e => e.ThumbnailImage)
             .FirstOrDefaultAsync(e => e.PartnerRole == role);
 
-            return Result.Ok(_mapper.Map<AdminPartnerApplyGetResponse>(partnerApply));
+            var response = _mapper.Map<AdminPartnerApplyGetResponse>(partnerApply);
+            var goods = response.Goods.FirstOrDefault();
+            response.TotalAmount = response.TotalQuantity * goods.Price;
+
+            return Result.Ok(response);
         }
     }
 }

@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Mytime.Distribution.Domain.Entities;
 using Mytime.Distribution.Domain.IRepositories;
 using Mytime.Distribution.Events;
@@ -16,13 +18,17 @@ namespace Mytime.Distribution.Handlers
     public class CustomerRelationHandler : INotificationHandler<CustomerRelationEvent>
     {
         private readonly IRepositoryByInt<CustomerRelation> _customerRelationRepository;
+        private readonly ILogger<CustomerRelationHandler> _logger;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="customerRelationRepository"></param>
-        public CustomerRelationHandler(IRepositoryByInt<CustomerRelation> customerRelationRepository)
+        /// <param name="logger"></param>
+        public CustomerRelationHandler(IRepositoryByInt<CustomerRelation> customerRelationRepository,
+                                       ILogger<CustomerRelationHandler> logger)
         {
             _customerRelationRepository = customerRelationRepository;
+            _logger = logger;
         }
         /// <summary>
         /// 处理
@@ -32,24 +38,36 @@ namespace Mytime.Distribution.Handlers
         /// <returns></returns>
         public async Task Handle(CustomerRelationEvent notification, CancellationToken cancellationToken)
         {
-            var customerRelations = new List<CustomerRelation>(){
-                new CustomerRelation(notification.ParentId, notification.ChildrenId, 1)
-            };
-
-            var relations = await _customerRelationRepository.Query().Where(e => e.ChildrenId == notification.ParentId).ToListAsync();
-            if (relations.Count > 0)
+            try
             {
-                foreach (var item in relations)
+                var customerRelations = new List<CustomerRelation>(){
+                    new CustomerRelation(notification.ParentId, notification.ChildrenId, 1)
+                };
+
+                var relations = await _customerRelationRepository.Query().Where(e => e.ChildrenId == notification.ParentId).ToListAsync();
+                if (relations.Count > 0)
                 {
-                    customerRelations.Add(new CustomerRelation(item.ParentId, notification.ChildrenId, item.Level + 1));
+                    foreach (var item in relations)
+                    {
+                        customerRelations.Add(new CustomerRelation(item.ParentId, notification.ChildrenId, item.Level + 1));
+                    }
+                }
+
+                using (var transaction = _customerRelationRepository.BeginTransaction())
+                {
+                    foreach (var item in customerRelations)
+                    {
+                        _customerRelationRepository.Insert(item, false);
+                    }
+
+                    await _customerRelationRepository.SaveAsync();
+
+                    transaction.Commit();
                 }
             }
-
-            using (var transaction = _customerRelationRepository.BeginTransaction())
+            catch (Exception ex)
             {
-                await _customerRelationRepository.SaveAsync();
-
-                transaction.Commit();
+                _logger.LogError(ex.Message, ex);
             }
         }
     }

@@ -278,6 +278,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     ShippingStatus = table.Column<byte>(nullable: false),
                     ShippingTime = table.Column<DateTime>(nullable: true),
                     CompleteTime = table.Column<DateTime>(nullable: true),
+                    IsValid = table.Column<bool>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -358,6 +359,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     PublishedOn = table.Column<DateTime>(nullable: true),
                     CityDiscount = table.Column<int>(nullable: false),
                     BranchDiscount = table.Column<int>(nullable: false),
+                    DisplayOrder = table.Column<int>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>

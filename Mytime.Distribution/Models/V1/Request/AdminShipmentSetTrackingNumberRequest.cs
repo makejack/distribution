@@ -22,7 +22,7 @@ namespace Mytime.Distribution.Models.V1.Request
         public string CourierCompanyCode { get; set; }
         /// <summary>
         /// 快递单号
-        /// /// </summary>
+        /// </summary>
         /// <value></value>
         public string TrackingNumber { get; set; }
     }

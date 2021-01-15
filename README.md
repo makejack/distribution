@@ -7,6 +7,7 @@ Service:d-mytimetech.service
 Service Location: /etc/systemd/system
 Port:5020
 域名:d.mytimetech.com
+数据库：mysql
 数据库名称：distribution
 数据库账号：distribution
 数据库密码：Zmkmx3hGrJWz6ySk

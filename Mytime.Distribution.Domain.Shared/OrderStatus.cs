@@ -18,6 +18,10 @@ namespace Mytime.Distribution.Domain.Shared
         /// </summary>
         PaymentFailed,
         /// <summary>
+        /// 订单关闭
+        /// </summary>
+        Closed,
+        /// <summary>
         /// 已付款
         /// </summary>
         PaymentReceived = 100,

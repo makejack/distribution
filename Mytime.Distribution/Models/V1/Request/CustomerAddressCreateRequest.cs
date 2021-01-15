@@ -3,7 +3,7 @@ namespace Mytime.Distribution.Models.V1.Request
     /// <summary>
     /// 微信用户地址
     /// </summary>
-    public class WeChatUserAddressCreateRequest
+    public class CustomerAddressCreateRequest
     {
         /// <summary>
         /// 是否默认

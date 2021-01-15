@@ -20,6 +20,10 @@ namespace Mytime.Distribution.Mapper
             CreateMap<Media, MediaResponse>();
             CreateMap<AdminUser, AdminUserResponse>();
             CreateMap<AdminUser, AdminEmployeeResponse>();
+            CreateMap<AdminAddress, CustomerAddressResponse>()
+            .ForMember(s => s.ProvinceName, o => o.MapFrom(s => s.Province.Name))
+            .ForMember(s => s.CityName, o => o.MapFrom(s => s.City.Name))
+            .ForMember(s => s.AreaName, o => o.MapFrom(s => s.Area.Name));
 
             CreateMap<Category, AdminCategoryResponse>();
             CreateMap<GoodsOption, AdminGoodsOptionResponse>();
@@ -30,7 +34,7 @@ namespace Mytime.Distribution.Mapper
             CreateMap<Goods, AdminGoodsListResponse>()
             .ForMember(s => s.ThumbnailImageUrl, o => o.MapFrom(s => s.ThumbnailImage.Url));
             CreateMap<Goods, GoodsGetResponse>()
-            .ForMember(s => s.ThumbnailImageId, o => o.MapFrom(s => s.ThumbnailImage.Url))
+            .ForMember(s => s.ThumbnailImageUrl, o => o.MapFrom(s => s.ThumbnailImage.Url))
             .ForMember(s => s.GoodsMedias, o => o.MapFrom(s => s.GoodsMedias.Select(e => e.Media)));
             CreateMap<Goods, GoodsListResponse>()
             .ForMember(s => s.ThumbnailImageUrl, o => o.MapFrom(s => s.ThumbnailImage.Url))
@@ -60,10 +64,20 @@ namespace Mytime.Distribution.Mapper
             CreateMap<Orders, OrderCreateResponse>();
             CreateMap<Orders, AdminOrderListResponse>();
             CreateMap<Orders, AdminOrderGetResponse>()
-            .ForMember(s => s.Items, o => o.MapFrom(s => s.OrderItems));
+            .ForMember(s => s.Items, o => o.MapFrom(s => s.OrderItems))
+            .ForMember(s => s.Billing, o => o.MapFrom(s => s.OrderBilling));
             CreateMap<OrderItem, AdminOrderItemResponse>();
+            CreateMap<OrderItem, AdminRefundListResponse>()
+            .ForMember(s => s.OrderNo, o => o.MapFrom(s => s.Order.OrderNo))
+            .ForMember(s => s.CustomerId, o => o.MapFrom(s => s.Order.CustomerId))
+            .ForMember(s => s.CustomerName, o => o.MapFrom(s => s.Order.Customer.NickName))
+            .ForMember(s => s.AvatarUrl, o => o.MapFrom(s => s.Order.Customer.AvatarUrl));
             CreateMap<OrderItem, ShipmentListOrderItemResponse>();
             CreateMap<OrderItem, ShipmentPendingListResponse>();
+            CreateMap<OrderItem, RefundGetResponse>()
+            .ForMember(s => s.Address, o => o.MapFrom(s => s.ReturnAddress));
+            CreateMap<ReturnAddress, ReturnAddressResponse>();
+            CreateMap<OrderBilling, AdminOrderBillingResponse>();
 
             CreateMap<Shipment, AdminShipmentListResponse>()
             .ForMember(s => s.Address, o => o.MapFrom(s => s.ShippingAddress));

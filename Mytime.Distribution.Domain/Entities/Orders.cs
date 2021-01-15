@@ -55,5 +55,6 @@ namespace Mytime.Distribution.Domain.Entities
         public bool IsFistOrder { get; set; }
 
         public virtual List<OrderItem> OrderItems { get; set; }
+        public virtual OrderBilling OrderBilling { get; set; }
     }
 }

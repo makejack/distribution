@@ -62,7 +62,9 @@ namespace Mytime.Distribution.Controllers
             }
 
             var totalRows = await queryable.CountAsync();
-            var customers = await queryable.Skip((request.Page - 1) * request.Limit).Take(request.Limit).OrderByDescending(e => e.Id).ToListAsync();
+            var customers = await queryable.OrderByDescending(e => e.Id)
+            .Skip((request.Page - 1) * request.Limit).Take(request.Limit)
+            .ToListAsync();
 
             return Result.Ok(new PaginationResponse(request.Page, totalRows, _mapper.Map<List<CustomerResponse>>(customers)));
         }

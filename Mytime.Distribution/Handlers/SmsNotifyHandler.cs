@@ -33,6 +33,7 @@ namespace Mytime.Distribution.Handlers
         {
             foreach (var item in notification.Tels)
             {
+                if (string.IsNullOrEmpty(item)) continue;
                 await _smsService.SendAsync(item, notification.Message);
             }
         }

@@ -290,6 +290,10 @@
               "target": "Package",
               "version": "[0.3.200, )"
             },
+            "Senparc.Weixin.MP": {
+              "target": "Package",
+              "version": "[16.11.101, )"
+            },
             "Senparc.Weixin.WxOpen": {
               "target": "Package",
               "version": "[3.9.101, )"

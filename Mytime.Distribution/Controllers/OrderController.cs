@@ -22,6 +22,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Mytime.Distribution.Events;
 using Mytime.Distribution.Utils.Constants;
+using Mytime.Distribution.Services.SmsContent;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -36,7 +37,9 @@ namespace Mytime.Distribution.Controllers
     public class OrderController : ControllerBase
     {
         private readonly ILogger _logger;
+        private readonly IAdminUserManager _adminUserManager;
         private readonly IRepositoryByInt<Orders> _orderRepository;
+        private readonly IRepositoryByInt<OrderBilling> _orderBillingRepository;
         private readonly IRepositoryByInt<Goods> _goodsRepository;
         private readonly IRepositoryByInt<Assets> _assetsRepository;
         private readonly IRepositoryByInt<PartnerApply> _partnerApplyRepository;
@@ -52,6 +55,8 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="orderRepository"></param>
+        /// <param name="adminUserManager"></param>
+        /// <param name="orderBillingRepository"></param>
         /// <param name="goodsRepository"></param>
         /// <param name="assetsRepository"></param>
         /// <param name="partnerApplyRepository"></param>
@@ -62,7 +67,9 @@ namespace Mytime.Distribution.Controllers
         /// <param name="cache"></param>
         /// <param name="mapper"></param>
         public OrderController(ILogger<OrderController> logger,
+                               IAdminUserManager adminUserManager,
                                IRepositoryByInt<Orders> orderRepository,
+                               IRepositoryByInt<OrderBilling> orderBillingRepository,
                                IRepositoryByInt<Goods> goodsRepository,
                                IRepositoryByInt<Assets> assetsRepository,
                                IRepositoryByInt<PartnerApply> partnerApplyRepository,
@@ -74,7 +81,9 @@ namespace Mytime.Distribution.Controllers
                                IMapper mapper)
         {
             _logger = logger;
+            _adminUserManager = adminUserManager;
             _orderRepository = orderRepository;
+            _orderBillingRepository = orderBillingRepository;
             _goodsRepository = goodsRepository;
             _assetsRepository = assetsRepository;
             _partnerApplyRepository = partnerApplyRepository;
@@ -106,17 +115,17 @@ namespace Mytime.Distribution.Controllers
             var extendParams = string.Empty;
             if (user.Role == PartnerRole.Default)
             {
-                if (request.Role == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "请选择合伙人角色类型");
+                // if (request.Role == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "请选择合伙人角色类型");
                 partnerConfig = _customerManager.GetUserPartnerConfig(request.Role);
 
                 commissionRatio = partnerConfig.FirstCommissionRatio / 100f;
-                extendParams = Enum.GetName(typeof(PartnerRole), request.Role);
+                // extendParams = Enum.GetName(typeof(PartnerRole), request.Role);
             }
             else
             {
                 partnerConfig = _customerManager.GetUserPartnerConfig(user.Role);
 
-                commissionRatio = partnerConfig.SecondaryCommissionRatio / 100f;
+                commissionRatio = partnerConfig.CommissionRatio / 100f;
                 // discountRate = partnerConfig.DiscountRate / 100f;
             }
 
@@ -132,7 +141,6 @@ namespace Mytime.Distribution.Controllers
             {
                 var first = request.Items.FirstOrDefault(e => e.Id == item.Id);
                 if (first == null) return Result.Fail(ResultCodes.RequestParamError, $"产品{item.Name}不存在");
-
                 if (!item.IsPublished) return Result.Fail(ResultCodes.RequestParamError, $"产品{item.Name}未发布");
 
                 var discountRate = 100f;
@@ -161,7 +169,7 @@ namespace Mytime.Distribution.Controllers
                         ShippingStatus = ShippingStatus.Default,
                         Createat = DateTime.Now,
                     };
-                    if (user.ParentId.HasValue)
+                    if (user.ParentId.HasValue && commission > 0)
                     {
                         orderItem.CommissionHistory = new CommissionHistory
                         {
@@ -195,7 +203,7 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderRepository.SaveAsync();
 
-                if (user.ParentId.HasValue)
+                if (user.ParentId.HasValue && totalCommission > 0)
                 {
                     await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission, 0);
                 }
@@ -231,10 +239,12 @@ namespace Mytime.Distribution.Controllers
             var commissionRatio = partnerConfig.FirstCommissionRatio / 100f;
             var extendParams = Enum.GetName(typeof(PartnerRole), request.Role);
 
+            var applyGoodses = partnerApply.PartnerApplyGoods;
             var orderItems = new List<OrderItem>();
-            foreach (var item in partnerApply.PartnerApplyGoods)
+            foreach (var item in request.Items)
             {
-                var commission = (int)(item.Price * commissionRatio);
+                var goods = applyGoodses.FirstOrDefault(e => e.GoodsId == item.Id);
+                var commission = (int)(goods.Price * commissionRatio);
 
                 for (int i = 0; i < item.Quantity; i++)
                 {
@@ -242,11 +252,11 @@ namespace Mytime.Distribution.Controllers
 
                     var orderItem = new OrderItem
                     {
-                        GoodsId = item.GoodsId,
-                        GoodsName = item.Goods.Name,
-                        GoodsPrice = item.Price,
-                        DiscountAmount = item.Price, //折扣
-                        GoodsMediaUrl = item.Goods.ThumbnailImage?.Url,
+                        GoodsId = goods.GoodsId,
+                        GoodsName = goods.Goods.Name,
+                        GoodsPrice = goods.Goods.Price,
+                        DiscountAmount = goods.Price, //折扣
+                        GoodsMediaUrl = goods.Goods.ThumbnailImage?.Url,
                         Quantity = 1,
                         Remarks = string.Empty,
                         ShippingStatus = ShippingStatus.Default,
@@ -290,7 +300,7 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderRepository.SaveAsync();
 
-                if (user.ParentId.HasValue)
+                if (user.ParentId.HasValue && totalCommission > 0)
                 {
                     await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission, 0);
                 }
@@ -384,6 +394,43 @@ namespace Mytime.Distribution.Controllers
 
                 return Result.Fail(ResultCodes.PaymentRequestError, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 账单票据
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("billing")]
+        public async Task<Result> Billing(OrderBillingRequest request)
+        {
+            var billing = await _orderBillingRepository.Query().FirstOrDefaultAsync(e => e.OrderId == request.OrderId);
+            if (billing != null) return Result.Fail(ResultCodes.RequestParamError, "开票申请已提交，无法重复申请。");
+
+            var anyOrder = await _orderRepository.Query().AnyAsync(e => e.Id == request.OrderId);
+            if (!anyOrder) return Result.Fail(ResultCodes.IdInvalid, "订单不存在");
+
+            billing = new OrderBilling
+            {
+                OrderId = request.OrderId,
+                BankAccount = request.BankAccount,
+                BankName = request.BankName,
+                CompanyAddress = request.CompanyAddress,
+                Email = request.Email,
+                IsInvoiced = false,
+                TaxNumber = request.TaxNumber,
+                TelePhone = request.TelePhone,
+                Title = request.Title,
+                Createat = DateTime.Now,
+            };
+
+            await _orderBillingRepository.InsertAsync(billing);
+
+            await _adminUserManager.BillingNotify(new BillingNotify
+            {
+                Title = request.Title
+            });
+
+            return Result.Ok();
         }
     }
 }

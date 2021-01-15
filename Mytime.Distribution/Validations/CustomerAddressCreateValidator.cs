@@ -6,12 +6,12 @@ namespace Mytime.Distribution.Validations
     /// <summary>
     /// 微信用户地址创建验证器
     /// </summary>
-    public class WeChatUserAddressCreateValidator : AbstractValidator<WeChatUserAddressCreateRequest>
+    public class CustomerAddressCreateValidator : AbstractValidator<CustomerAddressCreateRequest>
     {
         /// <summary>
         /// 验证器
         /// </summary>
-        public WeChatUserAddressCreateValidator()
+        public CustomerAddressCreateValidator()
         {
             RuleFor(x => x.UserName).NotEmpty().WithMessage("请输入收件人姓名").MaximumLength(128).WithMessage("最长128个字符");
 

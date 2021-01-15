@@ -9920,6 +9920,7 @@
       "NLog.Web.AspNetCore >= 4.9.3",
       "RabbitMQ.Client.Core.DependencyInjection >= 4.3.0",
       "Senparc.CO2NET.AspNet >= 0.3.200",
+      "Senparc.Weixin.MP >= 16.11.101",
       "Senparc.Weixin.WxOpen >= 3.9.101",
       "SixLabors.ImageSharp.Drawing >= 1.0.0-beta0007",
       "Swashbuckle.AspNetCore >= 5.6.3"
@@ -10019,6 +10020,10 @@
           "Senparc.CO2NET.AspNet": {
             "target": "Package",
             "version": "[0.3.200, )"
+          },
+          "Senparc.Weixin.MP": {
+            "target": "Package",
+            "version": "[16.11.101, )"
           },
           "Senparc.Weixin.WxOpen": {
             "target": "Package",

@@ -30,6 +30,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int TotalQuantity { get; set; }
         /// <summary>
+        /// 总价格
+        /// </summary>
+        /// <value></value>
+        public int TotalAmount { get; set; }
+        /// <summary>
         /// 创建时间
         /// </summary>
         /// <value></value>

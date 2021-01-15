@@ -100,5 +100,10 @@ namespace Mytime.Distribution.Models.V1.Response
         /// </summary>
         /// <value></value>
         public List<AdminOrderItemResponse> Items { get; set; }
+        /// <summary>
+        /// 票据
+        /// </summary>
+        /// <value></value>
+        public AdminOrderBillingResponse Billing { get; set; }
     }
 }

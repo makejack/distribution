@@ -5,6 +5,8 @@ namespace Mytime.Distribution.Domain.Shared
     /// </summary>
     public enum PaymentMethods : byte
     {
-        Wechat = 0
+        Wechat = 0,
+        AliPay,
+        POS
     }
 }

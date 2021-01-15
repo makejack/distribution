@@ -103,22 +103,24 @@ namespace Mytime.Distribution.EFCore.Repositories
 
         public int UpdateRange(IEnumerable<TEntity> entities)
         {
-
-            foreach (var item in entities)
-            {
-                Context.Entry(item).State = EntityState.Modified;
-            }
+            DbSet.UpdateRange(entities);
             return Context.SaveChanges();
+            // foreach (var item in entities)
+            // {
+            //     Context.Entry(item).State = EntityState.Modified;
+            // }
+            // return Context.SaveChanges();
         }
 
         public Task<int> UpdateRangeAsync(IEnumerable<TEntity> entities)
         {
-
-            foreach (var item in entities)
-            {
-                Context.Entry(item).State = EntityState.Modified;
-            }
+            DbSet.UpdateRange(entities);
             return Context.SaveChangesAsync();
+            // foreach (var item in entities)
+            // {
+            //     Context.Entry(item).State = EntityState.Modified;
+            // }
+            // return Context.SaveChangesAsync();
         }
 
         public int Remove(TEntity entity, bool isSave = true)

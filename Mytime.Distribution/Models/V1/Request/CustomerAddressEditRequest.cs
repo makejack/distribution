@@ -3,7 +3,7 @@ namespace Mytime.Distribution.Models.V1.Request
     /// <summary>
     /// 微信用户地址编辑请求
     /// </summary>
-    public class WeChatUserAddressEditRequest : WeChatUserAddressCreateRequest
+    public class CustomerAddressEditRequest : CustomerAddressCreateRequest
     {
         /// <summary>
         /// Id

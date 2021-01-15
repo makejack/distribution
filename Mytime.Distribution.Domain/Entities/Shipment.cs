@@ -50,6 +50,11 @@ namespace Mytime.Distribution.Domain.Entities
         /// <value></value>
         [MaxLength(512)]
         public string Remarks { get; set; }
+        /// <summary>
+        /// 是否有效
+        /// </summary>
+        /// <value></value>
+        public bool IsValid { get; set; }
 
         public ShippingStatus ShippingStatus { get; set; }
 

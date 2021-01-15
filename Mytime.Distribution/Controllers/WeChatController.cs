@@ -30,6 +30,10 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using Mytime.Distribution.Utils.Helpers;
+using Microsoft.AspNetCore.Http;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -43,24 +47,9 @@ namespace Mytime.Distribution.Controllers
     [Produces("application/json")]
     public class WeChatController : ControllerBase
     {
-        /// <summary>
-        /// 小程序Token
-        /// </summary>
-        public static readonly string Token = Config.SenparcWeixinSetting.WxOpenToken;//与微信小程序后台的Token设置保持一致，区分大小写。
-        /// <summary>
-        /// 小程序Key
-        /// </summary>
-        public static readonly string EncodingAESKey = Config.SenparcWeixinSetting.WxOpenEncodingAESKey;//与微信小程序后台的EncodingAESKey设置保持一致，区分大小写。
-        /// <summary>
-        /// 小程序AppId
-        /// </summary>
-        public static readonly string WxOpenAppId = Config.SenparcWeixinSetting.WxOpenAppId;//与微信小程序后台的AppId设置保持一致，区分大小写。
-        /// <summary>
-        /// 小程序Secret
-        /// </summary>
-        public static readonly string WxOpenAppSecret = Config.SenparcWeixinSetting.WxOpenAppSecret;//与微信小
 
         private readonly IWebHostEnvironment _enviromenet;
+        private readonly IHttpContextAccessor _accessor;
         private readonly IRepositoryByInt<Customer> _customerRepository;
         private readonly IMediator _mediator;
         private readonly ITokenService _tokenService;
@@ -71,12 +60,14 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="enviromenet"></param>
+        /// <param name="accessor"></param>
         /// <param name="customerRepository"></param>
         /// <param name="mediator"></param>
         /// <param name="tokenService"></param>
         /// <param name="logger"></param>
         /// <param name="mapper"></param>
         public WeChatController(IWebHostEnvironment enviromenet,
+                                IHttpContextAccessor accessor,
                                 IRepositoryByInt<Customer> customerRepository,
                                 IMediator mediator,
                                 ITokenService tokenService,
@@ -84,6 +75,7 @@ namespace Mytime.Distribution.Controllers
                                 IMapper mapper)
         {
             _enviromenet = enviromenet;
+            _accessor = accessor;
             _customerRepository = customerRepository;
             _mediator = mediator;
             _tokenService = tokenService;
@@ -102,20 +94,22 @@ namespace Mytime.Distribution.Controllers
         public async Task<Result> LiteAppLogin([FromBody] WeChatLiteAppLoginRequest request)
         {
             string errorMsg = string.Empty;
-            int? parentId = null;
-            if (request.ParentId > 0)
-            {
-                parentId = request.ParentId;
-            }
             try
             {
-                JsCode2JsonResult jsonResult = SnsApi.JsCode2Json(WxOpenAppId, WxOpenAppSecret, request.Code);
+                JsCode2JsonResult jsonResult = SnsApi.JsCode2Json(WechatService.WxOpenAppId, WechatService.WxOpenAppSecret, request.Code);
                 if (jsonResult != null && jsonResult.errcode == ReturnCode.请求成功)
                 {
                     var customer = await _customerRepository.Query()
                     .FirstOrDefaultAsync(e => e.OpenId == jsonResult.openid);
                     if (customer == null)
                     {
+                        int? parentId = null;
+                        var anyParent = await _customerRepository.Query().AnyAsync(e => e.Id == request.ParentId);
+                        if (anyParent)
+                        {
+                            parentId = request.ParentId;
+                        }
+
                         var userInfo = request.UserInfo;
                         customer = new Customer
                         {
@@ -146,22 +140,25 @@ namespace Mytime.Distribution.Controllers
                         {
                             await _mediator.Publish(new CustomerRelationEvent
                             {
-                                ParentId = parentId.Value,
+                                ParentId = request.ParentId,
                                 ChildrenId = customer.Id
                             });
                         }
                     }
                     else
                     {
-                        if (!customer.ParentId.HasValue && parentId.HasValue)
+                        if (!customer.ParentId.HasValue && request.ParentId > 0)
                         {
-                            customer.ParentId = parentId;
-
-                            await _mediator.Publish(new CustomerRelationEvent
+                            var anyParent = await _customerRepository.Query().AnyAsync(e => e.Id == request.ParentId);
+                            if (anyParent)
                             {
-                                ParentId = parentId.Value,
-                                ChildrenId = customer.Id
-                            });
+                                customer.ParentId = request.ParentId;
+                                await _mediator.Publish(new CustomerRelationEvent
+                                {
+                                    ParentId = request.ParentId,
+                                    ChildrenId = customer.Id
+                                });
+                            }
                         }
                         if (customer.SessionKey != jsonResult.session_key)
                         {
@@ -227,15 +224,22 @@ namespace Mytime.Distribution.Controllers
         public async Task<Result> QRCode()
         {
             var userId = HttpContext.GetUserId();
-            var appId = Config.SenparcWeixinSetting.WxOpenAppId;
+            var appId = WechatService.WxOpenAppId;
             var scene = $"id={userId}";
-            var page = "home/index";
+            var page = "pages/index/index";
             try
             {
+                var myShareCodePath = Path.Combine("images", "sharecodes", userId + ".png");
+                var physicalPath = Path.Combine(_enviromenet.WebRootPath, myShareCodePath);
+                var httpPath = _accessor.HttpContext.Request.GetHostUrl() + "/" + myShareCodePath.Replace(@"\", "/");
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    return Result.Ok(httpPath);
+                }
 
                 Image backgroundImg = null;
                 string sharePath = Path.Combine(_enviromenet.WebRootPath, "images/20210107152422.png");
-                var qrCodeImgDemo = Path.Combine(_enviromenet.WebRootPath, "images/qrcode_example.png");
+                // var qrCodeImgDemo = Path.Combine(_enviromenet.WebRootPath, "images/qrcode_example.png");
                 if (System.IO.File.Exists(sharePath))
                 {
                     backgroundImg = Image.Load(sharePath);
@@ -246,7 +250,7 @@ namespace Mytime.Distribution.Controllers
                     var wxResult = await WxAppApi.GetWxaCodeUnlimitAsync(appId, stream, scene, page);
                     if (wxResult.errcode == 0 && stream.Length > 1024)
                     {
-                        Image qrCodeImg = Image.Load(stream);
+                        Image qrCodeImg = Image.Load<Rgba32>(stream.GetBuffer());
                         qrCodeImg = qrCodeImg.Clone(e => e.Resize(211, 211));
                         backgroundImg.Mutate(e =>
                         {
@@ -254,13 +258,12 @@ namespace Mytime.Distribution.Controllers
                         });
                         using (var ms = new MemoryStream())
                         {
-                            backgroundImg.Save(ms, new JpegEncoder()
-                            {
-                                Quality = 50
-                            });
-                            string base64String = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
-                            return Result.Ok(base64String);
+                            backgroundImg.Save(physicalPath, new PngEncoder());
+                            // backgroundImg.SaveAsPng(ms);
+                            // string base64String = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+                            // return Result.Ok(base64String);
                         }
+                        return Result.Ok(httpPath);
                     }
                 }
             }

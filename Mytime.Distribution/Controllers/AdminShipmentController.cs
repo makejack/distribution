@@ -17,6 +17,7 @@ using Mytime.Distribution.Services;
 using Mytime.Distribution.Services.SmsContent;
 using Mytime.Distribution.Utils.Constants;
 using Mytime.Distribution.Utils.Helpers;
+using Senparc.Weixin.MP.AdvancedAPIs.TemplateMessage;
 
 namespace Mytime.Distribution.Controllers
 {

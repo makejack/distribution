@@ -31,42 +31,38 @@ namespace Mytime.Distribution.Controllers
     [Produces("application/json")]
     public class ShipmentController : ControllerBase
     {
-        private readonly IRepositoryByInt<AdminUser> _adminUserRepository;
+        private readonly IAdminUserManager _adminUserManager;
         private readonly IRepositoryByInt<Shipment> _shipmentRepository;
         private readonly IRepositoryByInt<OrderItem> _orderItemRepository;
         private readonly IRepositoryByInt<Goods> _goodsRepository;
         private readonly IRepositoryByInt<CustomerAddress> _customerAddressRepository;
         private readonly IShipmentService _shipmentService;
-        private readonly IMediator _mediator;
         private readonly IMapper _mapper;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="adminUserRepository"></param>
+        /// <param name="adminUserManager"></param>
         /// <param name="shipmentRepository"></param>
         /// <param name="orderItemRepository"></param>
         /// <param name="goodsRepository"></param>
         /// <param name="customerAddressRepository"></param>
         /// <param name="shipmentService"></param>
-        /// <param name="mediator"></param>
         /// <param name="mapper"></param>
-        public ShipmentController(IRepositoryByInt<AdminUser> adminUserRepository,
+        public ShipmentController(IAdminUserManager adminUserManager,
                                   IRepositoryByInt<Shipment> shipmentRepository,
                                   IRepositoryByInt<OrderItem> orderItemRepository,
                                   IRepositoryByInt<Goods> goodsRepository,
                                   IRepositoryByInt<CustomerAddress> customerAddressRepository,
                                   IShipmentService shipmentService,
-                                  IMediator mediator,
                                   IMapper mapper)
         {
-            _adminUserRepository = adminUserRepository;
+            _adminUserManager = adminUserManager;
             _shipmentRepository = shipmentRepository;
             _orderItemRepository = orderItemRepository;
             _goodsRepository = goodsRepository;
             _customerAddressRepository = customerAddressRepository;
             _shipmentService = shipmentService;
-            _mediator = mediator;
             _mapper = mapper;
         }
 
@@ -150,6 +146,7 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("list")]
+        [ProducesResponseType(typeof(List<ShipmentListResponse>), 200)]
         public async Task<Result> List([FromQuery] ShipmentListRequest request)
         {
             var page = request.Page;
@@ -159,7 +156,12 @@ namespace Mytime.Distribution.Controllers
 
             var userId = HttpContext.GetUserId();
 
-            var queryable = _shipmentRepository.Query().Where(e => e.CustomerId == userId && e.ShippingStatus == request.Status);
+            var queryable = _shipmentRepository.Query().Where(e => e.CustomerId == userId);
+            if (request.Status == ShippingStatus.Complete)
+                queryable = queryable.Where(e => e.ShippingStatus == request.Status);
+            else
+                queryable = queryable.Where(e => e.IsValid && e.ShippingStatus >= ShippingStatus.PendingShipment && e.ShippingStatus < ShippingStatus.Complete);
+
             var totalRows = await queryable.CountAsync();
             var shipments = await queryable.Include(e => e.ShipmentOrderItems).ThenInclude(e => e.OrderItem)
             .OrderByDescending(e => e.Id)
@@ -183,6 +185,24 @@ namespace Mytime.Distribution.Controllers
             if (shipment == null) return Result.Fail(ResultCodes.IdInvalid);
 
             return Result.Ok(_mapper.Map<ShipmentListResponse>(shipment));
+        }
+
+        /// <summary>
+        /// 装货详情
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("detail/{id}")]
+        [ProducesResponseType(typeof(AdminShipmentGetResponse), 200)]
+        public async Task<Result> Detail(int id)
+        {
+            var shipment = await _shipmentRepository.Query()
+            .Include(e => e.ShipmentOrderItems).ThenInclude(e => e.OrderItem)
+            .Include(e => e.ShippingAddress)
+            .FirstOrDefaultAsync(e => e.Id == id);
+            if (shipment == null) return Result.Fail(ResultCodes.IdInvalid);
+
+            return Result.Ok(_mapper.Map<AdminShipmentGetResponse>(shipment));
         }
 
         /// <summary>
@@ -357,6 +377,7 @@ namespace Mytime.Distribution.Controllers
                 item.ShippingTime = DateTime.Now;
             }
 
+            shipment.IsValid = true;
             shipment.Remarks = request.Remarks;
             shipment.ShippingAddress = shippingAddress;
 
@@ -371,21 +392,12 @@ namespace Mytime.Distribution.Controllers
                 transaction.Commit();
             }
 
-            var employeeTels = await _adminUserRepository.Query().Where(e => e.Role == EmployeeRole.AfterSale).Select(e => e.Tel).ToListAsync();
-            if (employeeTels.Count > 0)
+            var notify = new ShippingApplyNotify
             {
-                var shippingApplyNotify = new ShippingApplyNotify
-                {
-                    Name = shippingAddress.UserName,
-                    Tel = shippingAddress.TelNumber,
-                };
-                var notifyEvent = new SmsNotifyEvent
-                {
-                    Tels = employeeTels,
-                    Message = shippingApplyNotify
-                };
-                await _mediator.Publish(notifyEvent);
-            }
+                Name = shippingAddress.UserName,
+                Tel = shippingAddress.TelNumber,
+            };
+            await _adminUserManager.ShippingApplyNotify(notify);
 
             return Result.Ok();
         }
