@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +20,6 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 产品
     /// </summary>
-    [Authorize]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/goods")]
@@ -48,6 +50,8 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
+        [AllowAnonymous]
+        [Authorize]
         [HttpGet("list")]
         public async Task<Result> List([FromQuery] PaginationRequest request)
         {
@@ -71,7 +75,13 @@ namespace Mytime.Distribution.Controllers
             var goodsRes = _mapper.Map<List<GoodsListResponse>>(goodsList);
 
             var discountRate = 100f;
-            var user = await _customerManager.GetUserAsync();
+            Customer user = null;
+            var authenticationScheme = JwtBearerDefaults.AuthenticationScheme;
+            var auth = HttpContext.AuthenticateAsync(authenticationScheme);
+            if (auth.IsCompletedSuccessfully)
+            {
+                user = await _customerManager.GetUserAsync();
+            }
             // if (user.Role != PartnerRole.Default)
             // {
             //     var partnerConfig = _customerManager.GetUserPartnerConfig(user.Role);
@@ -81,10 +91,13 @@ namespace Mytime.Distribution.Controllers
             for (int i = 0; i < goodsList.Count; i++)
             {
                 var goods = goodsList[i];
-                if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
-                    discountRate = goods.CityDiscount;
-                else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
-                    discountRate = goods.BranchDiscount;
+                if (user != null)
+                {
+                    if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
+                        discountRate = goods.CityDiscount;
+                    else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
+                        discountRate = goods.BranchDiscount;
+                }
                 goodsRes[i].DiscountPrice = (int)(goods.Price * (discountRate / 100f));
             }
 
@@ -98,10 +111,11 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [AllowAnonymous]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<Result> Get(int id)
         {
-            var user = await _customerManager.GetUserAsync();
             var discountRate = 100f;
             // if (user.Role != PartnerRole.Default)
             // {
@@ -119,10 +133,18 @@ namespace Mytime.Distribution.Controllers
             if (goods == null) return Result.Fail(ResultCodes.IdInvalid);
 
             var goodsRes = _mapper.Map<GoodsGetResponse>(goods);
-            if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
-                discountRate = goods.CityDiscount;
-            else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
-                discountRate = goods.BranchDiscount;
+
+            var authenticationScheme = JwtBearerDefaults.AuthenticationScheme;
+            var auth = HttpContext.AuthenticateAsync(authenticationScheme);
+            if (auth.IsCompletedSuccessfully)
+            {
+                var user = await _customerManager.GetUserAsync();
+                if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
+                    discountRate = goods.CityDiscount;
+                else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
+                    discountRate = goods.BranchDiscount;
+            }
+
             goodsRes.DiscountPrice = (int)(goodsRes.Price * (discountRate / 100f));
 
             var optionIds = goods.OptionValues.OrderBy(e => e.DisplayOrder).ThenBy(x => x.Option.Name).GroupBy(c => c.OptionId).Select(s => s.Key).OrderBy(c => c);

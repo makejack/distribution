@@ -27,6 +27,7 @@ namespace Mytime.Distribution.Controllers
     public class AdminOrderController : ControllerBase
     {
         private readonly IRepositoryByInt<Orders> _orderRepository;
+        private readonly IRepositoryByInt<Customer> _customerRepository;
         private readonly ICustomerManager _customerManager;
         private readonly IMapper _mapper;
 
@@ -34,13 +35,16 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="orderRepository"></param>
+        /// <param name="customerRepository"></param>
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public AdminOrderController(IRepositoryByInt<Orders> orderRepository,
+        IRepositoryByInt<Customer> customerRepository,
                                     ICustomerManager customerManager,
                                     IMapper mapper)
         {
             _orderRepository = orderRepository;
+            _customerRepository = customerRepository;
             _customerManager = customerManager;
             _mapper = mapper;
         }
@@ -128,6 +132,65 @@ namespace Mytime.Distribution.Controllers
                 {
                     var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
                     await _customerManager.UpdateAssets(parentId, totalCommission, 0);
+                }
+
+                if (!string.IsNullOrEmpty(order.ExtendParams))
+                {
+                    var result = Enum.TryParse<PartnerRole>(order.ExtendParams, true, out var role);
+                    if (result)
+                    {
+                        await _customerRepository.UpdateProperyAsync(new Customer
+                        {
+                            Id = order.CustomerId,
+                            Role = role
+                        }, nameof(Customer.Role));
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+            return Result.Ok();
+        }
+
+        /// <summary>
+        /// 订单取消
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("cancel/{id}")]
+        public async Task<Result> Cancel(int id)
+        {
+            var order = await _orderRepository.Query()
+            .Include(e => e.OrderItems).ThenInclude(e => e.CommissionHistory)
+            .FirstOrDefaultAsync(e => e.Id == id);
+            if (order == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (order.OrderStatus != OrderStatus.PendingPayment) return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许修改");
+
+            var totalCommision = 0;
+            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
+            if (commissions.Count() > 0)
+            {
+                foreach (var item in commissions)
+                {
+                    item.Status = CommissionStatus.Invalidation;
+                    totalCommision += item.Commission;
+                }
+            }
+
+            order.OrderStatus = OrderStatus.Canceled;
+            order.CancelReason = "手动取消";
+            order.CancelTime = DateTime.Now;
+
+            _orderRepository.Update(order, false);
+
+            using (var transaction = _orderRepository.BeginTransaction())
+            {
+                await _orderRepository.SaveAsync();
+
+                if (totalCommision > 0)
+                {
+                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
+                    await _customerManager.UpdateAssets(parentId, -totalCommision, 0);
                 }
 
                 transaction.Commit();

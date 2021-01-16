@@ -54,7 +54,6 @@ namespace Mytime.Distribution.Middlewares
             // var actionName = controllerActionDescriptor.ActionName;
 
             var url = request.Path.ToString();
-            if (url.Contains("upload/images")) return;
             if (request.RouteValues.Count == 0) return;
 
             var log = new RequestResponseLog();
@@ -70,14 +69,17 @@ namespace Mytime.Distribution.Middlewares
             else if (request.Method.Equals("post", StringComparison.InvariantCultureIgnoreCase)
              || request.Method.Equals("put", StringComparison.InvariantCultureIgnoreCase))
             {
-                var stream = request.Body;
-                stream.Seek(0, SeekOrigin.Begin);
+                if (request.ContentType == "application/json")
+                {
+                    var stream = request.Body;
+                    stream.Seek(0, SeekOrigin.Begin);
 
-                var bytes = new byte[request.ContentLength.Value];
-                stream.Read(bytes, 0, bytes.Length);
-                log.RequestBody = Encoding.UTF8.GetString(bytes);
+                    var bytes = new byte[request.ContentLength.Value];
+                    stream.Read(bytes, 0, bytes.Length);
+                    log.RequestBody = Encoding.UTF8.GetString(bytes);
 
-                stream.Seek(0, SeekOrigin.Begin);
+                    stream.Seek(0, SeekOrigin.Begin);
+                }
             }
 
             await repository.InsertAsync(log);

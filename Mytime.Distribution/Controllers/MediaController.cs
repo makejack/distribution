@@ -62,21 +62,26 @@ namespace Mytime.Distribution.Controllers
 
             DateTime now = DateTime.Now;
             string extension = ".jpg";//Path.GetExtension(file.FileName);
-            string fileName = Guid.NewGuid().ToString("N") + extension;
-            string imageDir = Path.Combine(PRODUCT_IMAGE_PATH, now.ToString("yyyyMMdd"), fileName);
-            string imageFileName = Path.Combine(_environment.WebRootPath, imageDir);
-            FileHelper.CreateImgFolder(imageFileName);
+            string name = Guid.NewGuid().ToString("N");
+            string folder = now.ToString("yyyyMMdd");
+            string originalName = name + "_original" + extension;
+            string compressionName = name + extension;
+            string originalPath = Path.Combine(PRODUCT_IMAGE_PATH, folder, originalName);
+            string compressionPath = Path.Combine(PRODUCT_IMAGE_PATH, folder, compressionName);
+            string originaPhysicalPath = Path.Combine(_environment.WebRootPath, originalPath);
+            string compressionPhysicalPath = Path.Combine(_environment.WebRootPath, compressionPath);
+            FileHelper.CreateImgFolder(compressionPhysicalPath);
 
-            using (Stream mStream = new FileStream(imageFileName, FileMode.Create))
+            using (Stream mStream = new FileStream(originaPhysicalPath, FileMode.Create))
             {
                 await file.CopyToAsync(mStream);
 
                 //Bitmap srcBitmap = new Bitmap(stream);
                 //ImageHelper.Compress(srcBitmap, Path.Combine(imageDir, fileName), 50);
             }
-            SixLaborsImageSharpHelper.Compress(imageFileName, imageFileName, 50);
+            SixLaborsImageSharpHelper.Compress(originaPhysicalPath, compressionPhysicalPath, 50);
 
-            var media = new Media(imageDir, file.ContentType, file.Length);
+            var media = new Media(compressionPath, file.ContentType, file.Length);
             await _mediaRepository.InsertAsync(media);
 
             // 返回完整地址

@@ -625,11 +625,12 @@
             后台订单管理
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Orders},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Orders},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="orderRepository"></param>
+            <param name="customerRepository"></param>
             <param name="customerManager"></param>
             <param name="mapper"></param>
         </member>
@@ -650,6 +651,12 @@
             <summary>
             编辑订单信息
             /// </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.Cancel(System.Int32)">
+            <summary>
+            订单取消
+            </summary>
             <returns></returns>
         </member>
         <member name="M:Mytime.Distribution.Controllers.AdminOrderController.Delete(System.Int32)">
