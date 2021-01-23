@@ -36,7 +36,7 @@ namespace Mytime.Distribution.Domain.Entities
         /// 快递公司Code
         /// </summary>
         /// <value></value>
-        [MaxLength(512)]
+        [MaxLength(128)]
         public string CourierCompanyCode { get; set; }
         /// <summary>
         /// 快递单号

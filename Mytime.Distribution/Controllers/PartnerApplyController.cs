@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -42,18 +43,14 @@ namespace Mytime.Distribution.Controllers
         /// <param name="role"></param>
         /// <returns></returns>
         [HttpGet("condition/{role}")]
-        [ProducesResponseType(typeof(AdminPartnerApplyGetResponse), 200)]
+        [ProducesResponseType(typeof(PartnerApplyConditionResponse), 200)]
         public async Task<Result> Condition(PartnerRole role)
         {
             var partnerApply = await _partnerApplyRepository.Query()
             .Include(e => e.PartnerApplyGoods).ThenInclude(e => e.Goods).ThenInclude(e => e.ThumbnailImage)
             .FirstOrDefaultAsync(e => e.PartnerRole == role);
 
-            var response = _mapper.Map<AdminPartnerApplyGetResponse>(partnerApply);
-            var goods = response.Goods.FirstOrDefault();
-            response.TotalAmount = response.TotalQuantity * goods.Price;
-
-            return Result.Ok(response);
+            return Result.Ok(_mapper.Map<PartnerApplyConditionResponse>(partnerApply));
         }
     }
 }

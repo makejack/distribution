@@ -853,7 +853,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("TotalFee")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalWithDiscount")
+                    b.Property<int>("ActuallyAmount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WalletAmount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -881,7 +884,13 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<byte>("PartnerRole")
                         .HasColumnType("tinyint unsigned");
 
+                    b.Property<int>("OriginalPrice")
+                        .HasColumnType("int");
+
                     b.Property<int>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalAmount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1040,8 +1049,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasMaxLength(512);
 
                     b.Property<string>("CourierCompanyCode")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
+                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
+                        .HasMaxLength(128);
 
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
@@ -1206,8 +1215,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("HandlingFee")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsSuccess")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint unsigned");
 
                     b.Property<string>("Message")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")

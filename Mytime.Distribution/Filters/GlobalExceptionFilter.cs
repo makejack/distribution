@@ -90,7 +90,7 @@ namespace Mytime.Distribution.Filters
             }
             finally
             {
-                await _adminUserManager.ExceptionNotify();
+                await _adminUserManager.DevelopmentNotify();
 
                 //异常已处理
                 context.ExceptionHandled = true;

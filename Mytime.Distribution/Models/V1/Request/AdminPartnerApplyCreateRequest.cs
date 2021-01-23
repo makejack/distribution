@@ -19,6 +19,26 @@ namespace Mytime.Distribution.Models.V1.Request
         /// <value></value>
         public int TotalQuantity { get; set; }
         /// <summary>
+        /// 原价
+        /// </summary>
+        /// <value></value>
+        public int OriginalPrice { get; set; }
+        /// <summary>
+        /// 总金额
+        /// </summary>
+        /// <value></value>
+        public int TotalAmount { get; set; }
+        /// <summary>
+        /// 推荐佣金比例
+        /// </summary>
+        /// <value></value>
+        public int ReferralCommissionRatio { get; set; }
+        /// <summary>
+        /// 回购佣金比例
+        /// </summary>
+        /// <value></value>
+        public int RepurchaseCommissionRatio { get; set; }
+        /// <summary>
         /// 商品
         /// </summary>
         /// <value></value>

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Mytime.Distribution.Models;
 using Mytime.Distribution.Models.V1.Request;
 using Microsoft.EntityFrameworkCore;
 using Mytime.Distribution.Models.V1.Response;
+using Mytime.Distribution.Domain.Shared;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -92,7 +94,17 @@ namespace Mytime.Distribution.Controllers
             if (anyPartnerType) return Result.Fail(ResultCodes.RequestParamError, "当前合伙人类型已设置申请条件");
             if (request.Goods == null || request.Goods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "请选择商品");
 
-            var partnerApply = new PartnerApply(request.PartnerRole, request.TotalQuantity);
+            var partnerApply = new PartnerApply
+            {
+                OriginalPrice = request.OriginalPrice,
+                TotalAmount = request.TotalAmount,
+                ApplyType = PartnerApplyType.Default,
+                PartnerRole = request.PartnerRole,
+                TotalQuantity = request.TotalQuantity,
+                RepurchaseCommissionRatio = request.ReferralCommissionRatio,
+                ReferralCommissionRatio = request.RepurchaseCommissionRatio,
+                Createat = DateTime.Now,
+            };
             var partnerApplyGoods = new List<PartnerApplyGoods>();
             foreach (var goods in request.Goods)
             {
@@ -125,9 +137,13 @@ namespace Mytime.Distribution.Controllers
                 return Result.Fail(ResultCodes.RequestParamError, "当前合伙人类型已设置申请条件");
             }
 
+            partnerApply.ReferralCommissionRatio = request.ReferralCommissionRatio;
+            partnerApply.RepurchaseCommissionRatio = request.RepurchaseCommissionRatio;
             partnerApply.PartnerRole = request.PartnerRole;
             partnerApply.ApplyType = request.ApplyType;
             partnerApply.TotalQuantity = request.TotalQuantity;
+            partnerApply.TotalAmount = request.TotalAmount;
+            partnerApply.OriginalPrice = request.OriginalPrice;
 
             var partnerApplyGoods = new List<PartnerApplyGoods>();
             foreach (var goods in request.Goods)

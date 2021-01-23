@@ -42,6 +42,9 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         public async Task<PayBankResponse> PayBank(PayBankRequest request)
         {
+            // 获取Rsa值
+            // var wxRequest = new WeChatPayRiskGetPublicKeyRequest();
+            // var response = await _client.ExecuteAsync(wxRequest, _wechatPayOption); 
             var result = new PayBankResponse();
 
             var wxRequest = new WeChatPayPayBankRequest

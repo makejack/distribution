@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Collections.Specialized;
 using System;
 using Xunit;
@@ -59,6 +60,20 @@ namespace Mytime.Distribution.Test
 
             IOrderService orderService = new OrderService(orderRes, customerRes, null);
             orderService.PaymentReceived(request);
+        }
+
+        [Fact]
+        public void TestBankNo()
+        {
+            string bankNo = "6216610200016587010";
+            bankNo = Regex.Replace(bankNo, @"(\w{4})\d{10}(\w{4})", "$1*****$2");
+
+            Console.WriteLine(bankNo);
+            //Given
+
+            //When
+
+            //Then
         }
     }
 }

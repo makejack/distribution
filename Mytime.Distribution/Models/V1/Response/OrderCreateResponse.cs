@@ -21,9 +21,9 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int TotalFee { get; set; }
         /// <summary>
-        /// 总优惠价格
+        /// 实付价格
         /// </summary>
         /// <value></value>
-        public int TotalWithDiscount { get; set; }
+        public int ActuallyAmount { get; set; }
     }
 }

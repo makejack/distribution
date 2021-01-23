@@ -9,21 +9,21 @@ namespace Mytime.Distribution.Services
     public interface IAdminUserManager
     {
         /// <summary>
-        /// 开票通知
+        /// 账务通知
         /// </summary>
         /// <returns></returns>
-        Task BillingNotify(INotify notify);
+        Task AccountingNotify(INotify notify);
 
         /// <summary>
-        /// 程序异常通知
+        /// 开发人员通知
         /// </summary>
         /// <returns></returns>
-        Task ExceptionNotify();
+        Task DevelopmentNotify();
         /// <summary>
-        /// 发货申请通知
+        /// 售后通知
         /// </summary>
         /// <param name="notify"></param>
         /// <returns></returns>
-        Task ShippingApplyNotify(INotify notify);
+        Task AfterSaleNotify(INotify notify);
     }
 }

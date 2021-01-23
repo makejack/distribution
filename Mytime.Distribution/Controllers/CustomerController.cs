@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
@@ -14,6 +15,7 @@ using Mytime.Distribution.Models;
 using Mytime.Distribution.Models.V1.Request;
 using Mytime.Distribution.Models.V1.Response;
 using Mytime.Distribution.Services;
+using Mytime.Distribution.Utils.Helpers;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -28,6 +30,7 @@ namespace Mytime.Distribution.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly IRepositoryByInt<Customer> _customerRepository;
+        private readonly IRepositoryByInt<BankCard> _bankCardRepository;
         private readonly IRepositoryByInt<CustomerRelation> _customerRelationRepository;
         private readonly IRepositoryByInt<Assets> _assetsRepository;
         private readonly ICustomerManager _customerManager;
@@ -37,17 +40,20 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="customerRepository"></param>
+        /// <param name="bankCardRepository"></param>
         /// <param name="customerRelationRepository"></param>
         /// <param name="assetsRepository"></param>
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public CustomerController(IRepositoryByInt<Customer> customerRepository,
+                                  IRepositoryByInt<BankCard> bankCardRepository,
                                   IRepositoryByInt<CustomerRelation> customerRelationRepository,
                                   IRepositoryByInt<Assets> assetsRepository,
                                   ICustomerManager customerManager,
                                   IMapper mapper)
         {
             _customerRepository = customerRepository;
+            _bankCardRepository = bankCardRepository;
             _customerRelationRepository = customerRelationRepository;
             _assetsRepository = assetsRepository;
             _customerManager = customerManager;
@@ -73,15 +79,12 @@ namespace Mytime.Distribution.Controllers
         public async Task<Result> RealName([FromBody] CustomerRealNameRequest request)
         {
             var user = await _customerManager.GetUserAsync();
-            if (string.IsNullOrEmpty(user.Name)) return Result.Fail(ResultCodes.RequestParamError, "用户已实名");
 
             user.Name = request.Name;
             user.PhoneNumber = request.PhoneNumber;
-            user.BankCode = request.BankCode;
-            user.BankNo = request.BankNo;
             user.IsRealName = true;
 
-            await _customerRepository.UpdateProperyAsync(user, nameof(user.Name), nameof(user.PhoneNumber), nameof(user.BankCode), nameof(user.BankNo), nameof(user.IsRealName));
+            await _customerRepository.UpdateAsync(user);
 
             return Result.Ok();
         }

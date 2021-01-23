@@ -43,34 +43,76 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         public async Task PaymentReceived(PaymentReceivedRequest request)
         {
-            var order = await _orderRepository.Query().FirstOrDefaultAsync(e => e.OrderNo == request.OrderNo);
+            var order = await _orderRepository.Query()
+            .Include(e => e.OrderItems)
+            .ThenInclude(e => e.CommissionHistory)
+            .FirstOrDefaultAsync(e => e.OrderNo == request.OrderNo);
             if (order == null) return;
 
             var status = new OrderStatus[] { OrderStatus.PendingPayment, OrderStatus.PaymentFailed };
             if (!status.Contains(order.OrderStatus)) return;
+
+            var roleResult = false;
+            PartnerRole role = PartnerRole.Default;
+            if (!string.IsNullOrEmpty(order.ExtendParams))
+            {
+                roleResult = Enum.TryParse<PartnerRole>(order.ExtendParams, true, out role);
+            }
+
+            var totalCommission = 0;
+            var totalAmount = 0;
+            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
+            if (commissions.Count() > 0)
+            {
+                foreach (var item in commissions)
+                {
+                    if (order.IsFistOrder)
+                    {
+                        totalAmount += item.Commission;
+                        item.Status = CommissionStatus.Complete;
+                        item.SettlementTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        totalCommission += item.Commission;
+                        item.Status = CommissionStatus.PendingSettlement;
+                    }
+                }
+            }
 
             order.OrderStatus = OrderStatus.PaymentReceived;
             order.PaymentMethod = request.PaymentMethod;
             order.PaymentTime = request.PaymentTime;
             order.PaymentFee = request.PaymentFee;
 
-            await _orderRepository.UpdateProperyAsync(order);
+            _orderRepository.Update(order, false);
 
-            if (string.IsNullOrEmpty(order.ExtendParams)) return;
-
-            var result = Enum.TryParse<PartnerRole>(order.ExtendParams, true, out var role);
-            if (!result) return;
-
-            var customerRole = await _customerRepository.Query().Where(e => e.Id == order.CustomerId).Select(e => e.Role).FirstOrDefaultAsync();
-            if (customerRole != PartnerRole.Default) return;
-
-            // customer.Role = role;
-            await _customerRepository.UpdateProperyAsync(new Customer
+            using (var transaction = _orderRepository.BeginTransaction())
             {
-                Id = order.CustomerId,
-                Role = role
-            }, nameof(Customer.Role));
+                await _orderRepository.SaveAsync();
 
+                if (roleResult)
+                {
+                    await _customerRepository.UpdateProperyAsync(new Customer
+                    {
+                        Id = order.CustomerId,
+                        Role = role
+                    }, nameof(Customer.Role));
+                }
+
+                if (totalCommission > 0 || totalAmount > 0)
+                {
+                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
+                    await _customerManager.UpdateAssets(parentId, totalCommission, totalAmount, "下级首单返佣金");
+                }
+
+                if (order.WalletAmount > 0)
+                {
+                    await _customerManager.UpdateAssets(order.CustomerId, 0, -order.WalletAmount, "商品抵扣金额");
+                }
+
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -81,9 +123,7 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         public async Task<Result> Cancel(int orderId, string reason)
         {
-            var order = await _orderRepository.Query()
-            .Include(e => e.OrderItems).ThenInclude(e => e.CommissionHistory)
-            .FirstOrDefaultAsync(e => e.Id == orderId);
+            var order = await _orderRepository.Query().FirstOrDefaultAsync(e => e.Id == orderId);
             if (order == null) return Result.Fail(ResultCodes.IdInvalid);
 
             if (order.OrderStatus == OrderStatus.Canceled)
@@ -93,17 +133,6 @@ namespace Mytime.Distribution.Services
             if (!status.Contains(order.OrderStatus))
                 return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许删除");
 
-            var refundCommission = 0;
-            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
-            if (commissions.Count() > 0)
-            {
-                foreach (var item in commissions)
-                {
-                    item.Status = CommissionStatus.Invalidation;
-                    refundCommission += item.Commission;
-                }
-            }
-
             order.OrderStatus = OrderStatus.Canceled;
             order.CancelReason = reason;
             order.CancelTime = DateTime.Now;
@@ -112,12 +141,6 @@ namespace Mytime.Distribution.Services
             using (var transaction = _orderRepository.BeginTransaction())
             {
                 await _orderRepository.SaveAsync();
-
-                if (refundCommission > 0)
-                {
-                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
-                    await _customerManager.UpdateAssets(parentId, -refundCommission, 0);
-                }
 
                 transaction.Commit();
             }

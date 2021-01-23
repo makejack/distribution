@@ -14,6 +14,16 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int Id { get; set; }
         /// <summary>
+        /// 头像
+        /// </summary>
+        /// <value></value>
+        public string AvatarUrl { get; set; }
+        /// <summary>
+        /// 用户昵称
+        /// </summary>
+        /// <value></value>
+        public string NickName { get; set; }
+        /// <summary>
         /// 订单编号
         /// </summary>
         /// <value></value>
@@ -27,7 +37,12 @@ namespace Mytime.Distribution.Models.V1.Response
         /// 总优惠金额
         /// </summary>
         /// <value></value>
-        public int TotalWithDiscount { get; set; }
+        public int ActuallyAmount { get; set; }
+        /// <summary>
+        /// 钱包金额
+        /// </summary>
+        /// <value></value>
+        public int WalletAmount { get; set; }
         /// <summary>
         /// 订单状态
         /// </summary>
@@ -53,11 +68,6 @@ namespace Mytime.Distribution.Models.V1.Response
         /// </summary>
         /// <value></value>
         public DateTime? PaymentTime { get; set; }
-        /// <summary>
-        /// 备注
-        /// </summary>
-        /// <value></value>
-        public string Remarks { get; set; }
         /// <summary>
         /// 创建时间
         /// </summary>

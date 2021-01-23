@@ -31,29 +31,29 @@ namespace Mytime.Distribution.Services
         }
 
         /// <summary>
-        /// 发货申请通知
+        /// 售后通知
         /// </summary>
         /// <returns></returns>
-        public async Task ShippingApplyNotify(INotify notify)
+        public async Task AfterSaleNotify(INotify notify)
         {
             await SmsNotify(EmployeeRole.AfterSale, notify);
         }
 
         /// <summary>
-        /// 程序异常通知
+        /// 开发人员通知
         /// </summary>
         /// <returns></returns>
-        public async Task ExceptionNotify()
+        public async Task DevelopmentNotify()
         {
             var exceptionNotify = new ExceptionNotify();
             await SmsNotify(EmployeeRole.Development, exceptionNotify);
         }
 
         /// <summary>
-        /// 开票通知
+        /// 账务通知
         /// </summary>
         /// <returns></returns>
-        public async Task BillingNotify(INotify notify)
+        public async Task AccountingNotify(INotify notify)
         {
             await SmsNotify(EmployeeRole.Accounting, notify);
         }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 using Mytime.Distribution.Domain.Shared;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Mytime.Distribution.Domain.Entities
 {
@@ -39,18 +40,8 @@ namespace Mytime.Distribution.Domain.Entities
         public PartnerRole Role { get; set; }
         public byte Status { get; set; }
         public int? ParentId { get; set; }
-        /// <summary>
-        /// 银行卡编号
-        /// </summary>
-        /// <value></value>
-        [MaxLength(32)]
-        public string BankNo { get; set; }
-        /// <summary>
-        /// 微信银行编号
-        /// </summary>
-        /// <value></value>
-        [MaxLength(32)]
-        public string BankCode { get; set; }
+        [ForeignKey("ParentId")]
+        public virtual Customer Parent { get; set; }
         /// <summary>
         /// 是否实名
         /// </summary>
@@ -58,6 +49,7 @@ namespace Mytime.Distribution.Domain.Entities
         public bool IsRealName { get; set; }
         public DateTime Createat { get; set; }
 
+        public virtual List<Customer> Childrens { get; set; }
         public virtual Assets Assets { get; set; }
         public virtual List<WithdrawalHistory> WithdrawalHistorys { get; set; }
         public virtual List<CustomerRelation> CustomerRelationChildrens { get; set; }

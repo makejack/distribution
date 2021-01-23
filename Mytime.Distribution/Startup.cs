@@ -150,7 +150,6 @@ namespace Mytime.Distribution
             services.Configure<SmsConfig>(Configuration.GetSection("Cloud253SMSConfig"));
             services.AddScoped<ISmsService, SmsService>();
 
-            services.Configure<PartnerConfig>(Configuration.GetSection("Partner"));
             services.Configure<RabbitMQConnectionConfig>(Configuration.GetSection(nameof(RabbitMQConnectionConfig)));
             services.AddScoped<IRabbitMQClient, RabbitMQClient>();
         }
@@ -296,21 +295,23 @@ namespace Mytime.Distribution
             app.UseStaticFiles();
 
             app.UseRouting();
-            // app.UseSession();
-
-            app.UseMiddleware<RequestResponseLogMiddleware>();
-
-            UseSenparc(app, env, senparcSetting, senparcWeixinSetting);
+            
+            app.UseCors(POLICY_NAME);
 
             app.UseAuthentication();
             app.UseAuthorization();
+            // app.UseSession();
+
+            UseSenparc(app, env, senparcSetting, senparcWeixinSetting);
+
+            app.UseMiddleware<RequestResponseLogMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-            app.UseCors(POLICY_NAME);
+
         }
 
         private void UseSenparc(IApplicationBuilder app,

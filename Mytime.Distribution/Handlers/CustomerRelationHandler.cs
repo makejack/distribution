@@ -38,6 +38,7 @@ namespace Mytime.Distribution.Handlers
         /// <returns></returns>
         public async Task Handle(CustomerRelationEvent notification, CancellationToken cancellationToken)
         {
+            if (notification.ParentId == notification.ChildrenId) return;
             try
             {
                 var customerRelations = new List<CustomerRelation>(){

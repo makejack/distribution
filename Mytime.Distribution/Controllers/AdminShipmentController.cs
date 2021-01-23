@@ -102,6 +102,7 @@ namespace Mytime.Distribution.Controllers
         public async Task<Result> SetTrackingNumber(AdminShipmentSetTrackingNumberRequest request)
         {
             var shipment = await _shipmentRepository.Query()
+            .Include(e => e.ShipmentOrderItems).ThenInclude(e => e.OrderItem)
             .Include(e => e.ShippingAddress)
             .FirstOrDefaultAsync(e => e.Id == request.Id);
             if (shipment == null) return Result.Fail(ResultCodes.IdInvalid);
@@ -123,6 +124,13 @@ namespace Mytime.Distribution.Controllers
             {
                 shipment.ShippingStatus = ShippingStatus.Shipped;
                 shipment.ShippingTime = DateTime.Now;
+
+                var orderItems = shipment.ShipmentOrderItems.Select(e => e.OrderItem);
+                foreach (var item in orderItems)
+                {
+                    item.ShippingStatus = ShippingStatus.Shipped;
+                    item.ShippingTime = DateTime.Now;
+                }
 
                 var message = new AutoReceivedShippingEvent
                 {
@@ -146,7 +154,14 @@ namespace Mytime.Distribution.Controllers
                 await _smsService.SendAsync(address.TelNumber, notify);
             }
 
-            await _shipmentRepository.UpdateAsync(shipment);
+            _shipmentRepository.Update(shipment, false);
+
+            using (var transaction = _shipmentRepository.BeginTransaction())
+            {
+                await _shipmentRepository.SaveAsync();
+
+                transaction.Commit();
+            }
 
             return Result.Ok();
         }

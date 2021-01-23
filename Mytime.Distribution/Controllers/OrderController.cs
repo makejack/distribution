@@ -43,6 +43,7 @@ namespace Mytime.Distribution.Controllers
         private readonly IRepositoryByInt<Goods> _goodsRepository;
         private readonly IRepositoryByInt<Assets> _assetsRepository;
         private readonly IRepositoryByInt<PartnerApply> _partnerApplyRepository;
+        private readonly IRepositoryByInt<Customer> _customerRepository;
         private readonly IPaymentService _paymentService;
         private readonly IOrderService _orderService;
         private readonly ICustomerManager _customerManager;
@@ -60,6 +61,7 @@ namespace Mytime.Distribution.Controllers
         /// <param name="goodsRepository"></param>
         /// <param name="assetsRepository"></param>
         /// <param name="partnerApplyRepository"></param>
+        /// <param name="customerRepository"></param>
         /// <param name="paymentService"></param>
         /// <param name="orderService"></param>
         /// <param name="customerManager"></param>
@@ -73,6 +75,7 @@ namespace Mytime.Distribution.Controllers
                                IRepositoryByInt<Goods> goodsRepository,
                                IRepositoryByInt<Assets> assetsRepository,
                                IRepositoryByInt<PartnerApply> partnerApplyRepository,
+                               IRepositoryByInt<Customer> customerRepository,
                                IPaymentService paymentService,
                                IOrderService orderService,
                                ICustomerManager customerManager,
@@ -87,6 +90,7 @@ namespace Mytime.Distribution.Controllers
             _goodsRepository = goodsRepository;
             _assetsRepository = assetsRepository;
             _partnerApplyRepository = partnerApplyRepository;
+            _customerRepository = customerRepository;
             _paymentService = paymentService;
             _orderService = orderService;
             _customerManager = customerManager;
@@ -100,33 +104,34 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
+        [ProducesResponseType(typeof(OrderCreateResponse), 200)]
         public async Task<Result> Create([FromBody] OrderCreateRequest request)
         {
             if (request == null) return Result.Fail(ResultCodes.RequestParamError);
             if (request.Items == null || request.Items.Count <= 0) return Result.Fail(ResultCodes.RequestParamError, "请选择商品");
             if (request.Items.Any(c => c.Quantity <= 0)) return Result.Fail(ResultCodes.RequestParamError, "购买商品数量必须大于0");
 
-            var user = await _customerManager.GetUserAsync();
+            DateTime? timeNull = null;
+            Assets assets = null;
+            var user = await _customerManager.GetUserAndParentAsync();
 
-            PartnerItemConfig partnerConfig = null;
-
-            var commissionRatio = 0f;
-            var totalCommission = 0;
+            var commissionRatio = 0f;//佣金百分比
+            var totalCommission = 0;//总佣金
             var extendParams = string.Empty;
-            if (user.Role == PartnerRole.Default)
+            if (user.Role != PartnerRole.Default)
             {
-                // if (request.Role == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "请选择合伙人角色类型");
-                partnerConfig = _customerManager.GetUserPartnerConfig(request.Role);
-
-                commissionRatio = partnerConfig.FirstCommissionRatio / 100f;
-                // extendParams = Enum.GetName(typeof(PartnerRole), request.Role);
-            }
-            else
-            {
-                partnerConfig = _customerManager.GetUserPartnerConfig(user.Role);
-
-                commissionRatio = partnerConfig.CommissionRatio / 100f;
-                // discountRate = partnerConfig.DiscountRate / 100f;
+                var parentUser = user.Parent;
+                if (parentUser != null)
+                {
+                    var ratio = await _partnerApplyRepository.Query()
+                    .Where(e => e.PartnerRole == parentUser.Role)
+                    .Select(e => e.RepurchaseCommissionRatio)
+                    .FirstOrDefaultAsync();
+                    if (ratio > 0)
+                    {
+                        commissionRatio = ratio / 100f;
+                    }
+                }
             }
 
             var goodsIds = request.Items.Select(c => c.Id).Distinct();
@@ -176,7 +181,7 @@ namespace Mytime.Distribution.Controllers
                             CustomerId = user.ParentId.Value,
                             Commission = commission,
                             Percentage = (int)(commissionRatio * 100),
-                            Status = CommissionStatus.PendingSettlement,
+                            Status = CommissionStatus.Invalidation,
                             Createat = DateTime.Now,
                         };
                     }
@@ -184,17 +189,49 @@ namespace Mytime.Distribution.Controllers
                 }
             }
 
+            var totalFee = orderItems.Sum(e => e.Quantity * e.GoodsPrice);
+            var actuallyAmount = orderItems.Sum(e => e.Quantity * e.DiscountAmount);
+            var walletAmount = 0; //钱包扣除金额
+            if (request.IsUseWallet)
+            {
+                assets = await _assetsRepository.Query().FirstOrDefaultAsync(e => e.CustomerId == user.Id);
+                if (assets.AvailableAmount > 0)
+                {
+                    if (assets.AvailableAmount > actuallyAmount)
+                    {
+                        walletAmount = assets.AvailableAmount - actuallyAmount;
+                    }
+                    else
+                    {
+                        walletAmount = actuallyAmount - assets.AvailableAmount;
+                    }
+                    double ratio = ((double)walletAmount / actuallyAmount);
+                    actuallyAmount -= walletAmount;
+                    foreach (var item in orderItems)
+                    {
+                        item.DiscountAmount -= (int)(item.DiscountAmount * ratio);
+                        if (actuallyAmount == 0)
+                        {
+                            item.CommissionHistory.Status = CommissionStatus.PendingSettlement;
+                        }
+                    }
+                }
+            }
+
             var order = new Orders(GenerateHelper.GenOrderNo())
             {
                 CustomerId = user.Id,
-                OrderStatus = OrderStatus.PendingPayment,
+                OrderStatus = actuallyAmount > 0 ? OrderStatus.PendingPayment : OrderStatus.PaymentReceived,
                 PaymentType = request.PaymentType,
+                PaymentMethod = actuallyAmount == 0 ? PaymentMethods.Wallet : PaymentMethods.Wechat,
                 Remarks = request.Remarks,
                 Createat = DateTime.Now,
-                TotalFee = orderItems.Sum(e => e.Quantity * e.GoodsPrice),
-                TotalWithDiscount = orderItems.Sum(e => e.Quantity * e.DiscountAmount),
+                TotalFee = totalFee,
+                ActuallyAmount = actuallyAmount,
+                WalletAmount = walletAmount,
                 ExtendParams = extendParams,
-                OrderItems = orderItems
+                PaymentTime = actuallyAmount == 0 ? DateTime.Now : timeNull,
+                OrderItems = orderItems,
             };
 
             _orderRepository.Insert(order, false);
@@ -203,9 +240,14 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderRepository.SaveAsync();
 
-                if (user.ParentId.HasValue && totalCommission > 0)
+                if (user.ParentId.HasValue && actuallyAmount == 0 && totalCommission > 0)
                 {
-                    await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission, 0);
+                    await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission);
+                }
+
+                if (actuallyAmount == 0 && walletAmount > 0)
+                {
+                    await _customerManager.UpdateAssets(assets, -walletAmount, "商品抵扣");
                 }
 
                 transaction.Commit();
@@ -218,10 +260,10 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("partner")]
-        public async Task<Result> Partner(OrderCreateRequest request)
+        public async Task<Result> Partner(OrderPartnerRequest request)
         {
             if (request.Role == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "请选择合伙人角色");
-            var user = await _customerManager.GetUserAsync();
+            var user = await _customerManager.GetUserAndParentAsync();
             if (user.Role != PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "当前用户已经是合伙人");
 
             var partnerApply = await _partnerApplyRepository.Query()
@@ -230,33 +272,59 @@ namespace Mytime.Distribution.Controllers
             .FirstOrDefaultAsync();
             if (partnerApply == null) return Result.Fail(ResultCodes.RequestParamError);
             if (partnerApply.PartnerApplyGoods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "没有商品");
-            var totalQuantity = request.Items.Sum(e => e.Quantity);
-            if (totalQuantity != partnerApply.TotalQuantity) return Result.Fail(ResultCodes.RequestParamError, "商品数量未达到要求");
 
             var totalCommission = 0;
-
-            PartnerItemConfig partnerConfig = _customerManager.GetUserPartnerConfig(request.Role);
-            var commissionRatio = partnerConfig.FirstCommissionRatio / 100f;
+            var commissionRatio = 0f;
+            if (user.Parent != null)
+            {
+                var parentUser = user.Parent;
+                if (parentUser.Role == partnerApply.PartnerRole)
+                {
+                    if (partnerApply.ReferralCommissionRatio > 0)
+                    {
+                        commissionRatio = partnerApply.ReferralCommissionRatio / 100f;
+                    }
+                }
+                else
+                {
+                    var ratio = await _partnerApplyRepository.Query()
+                    .Where(e => e.PartnerRole == parentUser.Role)
+                    .Select(e => e.ReferralCommissionRatio)
+                    .FirstOrDefaultAsync();
+                    if (ratio > 0)
+                    {
+                        commissionRatio = ratio / 100f;
+                    }
+                }
+            }
             var extendParams = Enum.GetName(typeof(PartnerRole), request.Role);
 
-            var applyGoodses = partnerApply.PartnerApplyGoods;
+            // var applyGoodses = partnerApply.PartnerApplyGoods;
+            var goodsQuantity = partnerApply.PartnerApplyGoods.Sum(e => e.Quantity);
+            var averagePrice = partnerApply.TotalAmount / goodsQuantity;
+            var remainder = partnerApply.TotalAmount % goodsQuantity;
+            var quantity = 0;
             var orderItems = new List<OrderItem>();
-            foreach (var item in request.Items)
+            foreach (var item in partnerApply.PartnerApplyGoods)
             {
-                var goods = applyGoodses.FirstOrDefault(e => e.GoodsId == item.Id);
-                var commission = (int)(goods.Price * commissionRatio);
-
+                // var goods = applyGoodses.FirstOrDefault(e => e.GoodsId == item.Id);
+                quantity += item.Quantity;
+                if (quantity == goodsQuantity)
+                {
+                    averagePrice += remainder;
+                }
+                var commission = (int)(averagePrice * commissionRatio);
                 for (int i = 0; i < item.Quantity; i++)
                 {
                     totalCommission += commission;
 
                     var orderItem = new OrderItem
                     {
-                        GoodsId = goods.GoodsId,
-                        GoodsName = goods.Goods.Name,
-                        GoodsPrice = goods.Goods.Price,
-                        DiscountAmount = goods.Price, //折扣
-                        GoodsMediaUrl = goods.Goods.ThumbnailImage?.Url,
+                        GoodsId = item.GoodsId,
+                        GoodsName = item.Goods.Name,
+                        GoodsPrice = item.Goods.Price,
+                        DiscountAmount = item.Goods.Price, //折扣
+                        GoodsMediaUrl = item.Goods.ThumbnailImage?.Url,
                         Quantity = 1,
                         Remarks = string.Empty,
                         ShippingStatus = ShippingStatus.Default,
@@ -264,14 +332,14 @@ namespace Mytime.Distribution.Controllers
                         IsFirstBatchGoods = true
                     };
 
-                    if (user.ParentId.HasValue)
+                    if (user.ParentId.HasValue && commission > 0)
                     {
                         orderItem.CommissionHistory = new CommissionHistory
                         {
                             CustomerId = user.ParentId.Value,
                             Commission = commission,
                             Percentage = (int)(commissionRatio * 100),
-                            Status = CommissionStatus.PendingSettlement,
+                            Status = CommissionStatus.Invalidation,
                             Createat = DateTime.Now,
                         };
                     }
@@ -287,8 +355,8 @@ namespace Mytime.Distribution.Controllers
                 PaymentType = request.PaymentType,
                 Remarks = request.Remarks,
                 Createat = DateTime.Now,
-                TotalFee = orderItems.Sum(e => e.Quantity * e.GoodsPrice),
-                TotalWithDiscount = orderItems.Sum(e => e.Quantity * e.DiscountAmount),
+                TotalFee = partnerApply.OriginalPrice,
+                ActuallyAmount = partnerApply.TotalAmount,
                 ExtendParams = extendParams,
                 IsFistOrder = true,
                 OrderItems = orderItems
@@ -299,11 +367,6 @@ namespace Mytime.Distribution.Controllers
             using (var transaction = _orderRepository.BeginTransaction())
             {
                 await _orderRepository.SaveAsync();
-
-                if (user.ParentId.HasValue && totalCommission > 0)
-                {
-                    await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission, 0);
-                }
 
                 transaction.Commit();
             }
@@ -359,7 +422,7 @@ namespace Mytime.Distribution.Controllers
             if (!status.Contains(order.OrderStatus))
                 return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许付款");
 
-            if (order.TotalWithDiscount <= 0) return Result.Fail(ResultCodes.RequestParamError, "订单金额不能为0");
+            if (order.ActuallyAmount <= 0) return Result.Fail(ResultCodes.RequestParamError, "订单金额不能为0");
 
             var user = await _customerManager.GetUserAsync();
             try
@@ -368,7 +431,7 @@ namespace Mytime.Distribution.Controllers
                 {
                     OrderNo = order.OrderNo,
                     OpenId = user.OpenId,
-                    TotalFee = order.TotalWithDiscount,
+                    TotalFee = order.ActuallyAmount,
                     Subject = "大脉商城",
                 });
 
@@ -425,7 +488,7 @@ namespace Mytime.Distribution.Controllers
 
             await _orderBillingRepository.InsertAsync(billing);
 
-            await _adminUserManager.BillingNotify(new BillingNotify
+            await _adminUserManager.AccountingNotify(new BillingNotify
             {
                 Title = request.Title
             });

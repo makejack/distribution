@@ -1,18 +1,17 @@
-using System.Data;
 using FluentValidation;
 using Mytime.Distribution.Models.V1.Request;
 
 namespace Mytime.Distribution.Validations
 {
     /// <summary>
-    /// 用户实名验证器
+    /// 创建银行卡验证器
     /// </summary>
-    public class CustomerRealNameValidator : AbstractValidator<CustomerRealNameRequest>
+    public class BankCardCreateValidator : AbstractValidator<BankCardCreateRequest>
     {
         /// <summary>
-        /// 验证器
+        /// 构造函数
         /// </summary>
-        public CustomerRealNameValidator()
+        public BankCardCreateValidator()
         {
             RuleFor(e => e.Name).NotEmpty().WithMessage("姓名不能为空");
 
@@ -20,7 +19,8 @@ namespace Mytime.Distribution.Validations
 
             RuleFor(e => e.BankCode).NotEmpty().WithMessage("银行编号不能为空");
 
-            RuleFor(e => e.BankNo).NotEmpty().WithMessage("银行卡编号不能为空");
+            RuleFor(e => e.BankNo).NotEmpty().WithMessage("银行卡编号不能为空")
+            .Matches(@"^([1-9]{1})(\d{14}|\d{18})$").WithMessage("银行卡编号格式不正确");
         }
     }
 }

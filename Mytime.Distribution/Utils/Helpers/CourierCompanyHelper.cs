@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace Mytime.Distribution.Utils.Helpers
 {
@@ -14,33 +16,8 @@ namespace Mytime.Distribution.Utils.Helpers
         /// <returns></returns>
         public static string GetCompanyName(string code)
         {
-            return (GetCompanys())[code];
-        }
-
-        private static Dictionary<string, string> GetCompanys()
-        {
-            return new Dictionary<string, string>
-            {
-                {"yuantong","圆通速递"},
-                {"yunda","韵达快递"},
-                {"zhongtong","中通快递"},
-                {"youzhengguonei","邮政快递包裹"},
-                {"huitongkuaidi","百世快递"},
-                {"shunfeng","顺丰速运"},
-                {"shentong","申通快递"},
-                {"jd","京东物流"},
-                {"ems","EMS"},
-                {"tiantian","天天快递"},
-                {"jtexpress","极兔速递"},
-                {"youzhengbk","邮政标准快递"},
-                {"debangwuliu","德邦"},
-                {"debangkuaidi","德邦快递"},
-                {"zhongyouex","众邮快递"},
-                {"zhaijisong","宅急送"},
-                {"youshuwuliu","优速快递"},
-                {"baishiwuliu","百世快运"},
-                {"suning","苏宁物流"},
-            };
+            var codes = JsonConvert.DeserializeObject<List<KuaidiCode>>(Kuaidi100Code.Codes);
+            return codes.Where(e => e.Code == code).Select(e => e.Title).FirstOrDefault();
         }
     }
 }

@@ -7,6 +7,13 @@ namespace Mytime.Distribution.Domain.Shared
     {
         Wechat = 0,
         AliPay,
-        POS
+        /// <summary>
+        /// POS机
+        /// </summary>
+        POS,
+        /// <summary>
+        /// 钱包余额
+        /// </summary>
+        Wallet
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Mytime.Distribution.Domain.Shared;
 
 namespace Mytime.Distribution.Models.V1.Response
 {
@@ -27,6 +28,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// </summary>
         /// <value></value>
         public bool IsAdmin { get; set; }
+        /// <summary>
+        /// 角色
+        /// </summary>
+        /// <value></value>
+        public EmployeeRole Role { get; set; }
         /// <summary>
         /// 创建时间
         /// </summary>

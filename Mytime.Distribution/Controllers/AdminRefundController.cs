@@ -199,7 +199,7 @@ namespace Mytime.Distribution.Controllers
                 commission.Status = CommissionStatus.Invalidation;
                 commission.SettlementTime = DateTime.Now;
 
-                await _customerManager.UpdateAssets(commission.CustomerId, -commission.Commission, 0);
+                await _customerManager.UpdateAssets(commission.CustomerId, -commission.Commission);
             }
 
             var order = refundItem.Order;
@@ -228,6 +228,11 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderItemRepository.SaveAsync();
 
+                if (refundItem.DiscountAmount > 0)
+                {
+                    await _customerManager.UpdateAssets(order.CustomerId, 0, refundItem.DiscountAmount, "退款");
+                }
+                
                 transaction.Commit();
             }
 

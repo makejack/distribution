@@ -13,6 +13,11 @@ namespace Mytime.Distribution.Models.V1.Request
         /// <value></value>
         public int? CustomerId { get; set; }
         /// <summary>
+        /// 订单编号
+        /// </summary>
+        /// <value></value>
+        public string OrderNo { get; set; }
+        /// <summary>
         /// 订单状态
         /// </summary>
         /// <value></value>

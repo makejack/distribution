@@ -24,7 +24,16 @@ namespace Mytime.Distribution.Domain.Entities
         [MaxLength(32)]
         public string OrderNo { get; set; }
         public int TotalFee { get; set; }
-        public int TotalWithDiscount { get; set; }
+        /// <summary>
+        /// 实付金额
+        /// </summary>
+        /// <value></value>
+        public int ActuallyAmount { get; set; }
+        /// <summary>
+        /// 钱包金额
+        /// </summary>
+        /// <value></value>
+        public int WalletAmount { get; set; }
         public OrderStatus OrderStatus { get; set; }
         public PaymentTypes PaymentType { get; set; }
         public PaymentMethods PaymentMethod { get; set; }

@@ -43,7 +43,7 @@ namespace Mytime.Distribution.Controllers
         }
 
         /// <summary>
-        /// 退款详情
+        /// 退货详情
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -55,7 +55,7 @@ namespace Mytime.Distribution.Controllers
 
             var item = await _orderItemRepository.Query()
             .Include(e => e.ReturnAddress)
-            .Where(e => e.Order.CustomerId == userId && e.RefundStatus != RefundStatus.Default)
+            // .Where(e => e.Order.CustomerId == userId && e.RefundStatus != RefundStatus.Default)
             .FirstOrDefaultAsync(e => e.Id == id);
             if (item == null) return Result.Fail(ResultCodes.IdInvalid);
 
@@ -71,7 +71,7 @@ namespace Mytime.Distribution.Controllers
         {
             var item = await _orderItemRepository.FirstOrDefaultAsync(request.Id);
             if (item == null) return Result.Fail(ResultCodes.IdInvalid);
-            if (item.IsFirstBatchGoods) return Result.Fail(ResultCodes.RequestParamError, "首指商品不允许退货");
+            if (item.IsFirstBatchGoods) return Result.Fail(ResultCodes.RequestParamError, "首批商品不允许退货");
             if (item.ShippingStatus != ShippingStatus.Shipped) return Result.Fail(ResultCodes.RequestParamError, "当前商品状态不允许退货");
             if (item.RefundStatus == RefundStatus.RefundApply) return Result.Fail(ResultCodes.RequestParamError, "当前商品已申请退货");
             var status = new[] { RefundStatus.ApplyFaild };

@@ -6,7 +6,7 @@ namespace Mytime.Distribution.Models.V1.Request
     public class CustomerRealNameRequest
     {
         /// <summary>
-        /// 姓名
+        /// 微信实名真实姓名
         /// </summary>
         /// <value></value>
         public string Name { get; set; }
@@ -15,15 +15,5 @@ namespace Mytime.Distribution.Models.V1.Request
         /// </summary>
         /// <value></value>
         public string PhoneNumber { get; set; }
-        /// <summary>
-        /// 银行卡编号
-        /// </summary>
-        /// <value></value>
-        public string BankNo { get; set; }
-        /// <summary>
-        /// 信息银行编号
-        /// </summary>
-        /// <value></value>
-        public string BankCode { get; set; }
     }
 }

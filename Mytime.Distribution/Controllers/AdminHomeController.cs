@@ -249,7 +249,7 @@ namespace Mytime.Distribution.Controllers
             .Select(e => new
             {
                 ParentId = e.ParentId,
-                Amount = e.Children.Orders.Where(e => e.OrderStatus >= OrderStatus.PaymentReceived).Sum(e => e.TotalWithDiscount)
+                Amount = e.Children.Orders.Where(e => e.OrderStatus >= OrderStatus.PaymentReceived).Sum(e => e.ActuallyAmount )
             }).ToListAsync();
 
             var childStatistics = childAmouns.GroupBy(e => e.ParentId).Select(e => new

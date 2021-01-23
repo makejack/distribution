@@ -117,6 +117,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     PartnerRole = table.Column<byte>(nullable: false),
                     ApplyType = table.Column<byte>(nullable: false),
                     TotalQuantity = table.Column<int>(nullable: false),
+                    OriginalPrice = table.Column<int>(nullable: false),
+                    TotalAmount = table.Column<int>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -235,7 +237,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     CustomerId = table.Column<int>(nullable: false),
                     OrderNo = table.Column<string>(maxLength: 32, nullable: true),
                     TotalFee = table.Column<int>(nullable: false),
-                    TotalWithDiscount = table.Column<int>(nullable: false),
+                    ActuallyAmount = table.Column<int>(nullable: false),
+                    WalletAmount = table.Column<int>(nullable: false),
                     OrderStatus = table.Column<byte>(nullable: false),
                     PaymentType = table.Column<byte>(nullable: false),
                     PaymentMethod = table.Column<byte>(nullable: false),
@@ -303,7 +306,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     Total = table.Column<int>(nullable: false),
                     Amount = table.Column<int>(nullable: false),
                     HandlingFee = table.Column<int>(nullable: false),
-                    IsSuccess = table.Column<bool>(nullable: false),
+                    Status = table.Column<byte>(nullable: false),
                     Message = table.Column<string>(maxLength: 512, nullable: true),
                     Createat = table.Column<DateTime>(nullable: false)
                 },

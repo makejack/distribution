@@ -80,7 +80,7 @@ namespace Mytime.Distribution.Services
                     var parentUser = await _customerRelationRepository.Query().FirstOrDefaultAsync(e => e.ChildrenId == shipment.CustomerId && e.Level == 1);
                     if (parentUser != null)
                     {
-                        await _customerManager.UpdateAssets(parentUser.ParentId, -totalCommission, totalCommission);
+                        await _customerManager.UpdateAssets(parentUser.ParentId, -totalCommission, totalCommission, "返佣金");
                     }
                 }
 

@@ -39,7 +39,7 @@ namespace Mytime.Distribution.Controllers
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public AdminOrderController(IRepositoryByInt<Orders> orderRepository,
-        IRepositoryByInt<Customer> customerRepository,
+                                    IRepositoryByInt<Customer> customerRepository,
                                     ICustomerManager customerManager,
                                     IMapper mapper)
         {
@@ -62,15 +62,37 @@ namespace Mytime.Distribution.Controllers
             {
                 queryable = queryable.Where(e => e.CustomerId == request.CustomerId.Value);
             }
+            if (!string.IsNullOrEmpty(request.OrderNo))
+            {
+                queryable = queryable.Where(e => e.OrderNo == request.OrderNo);
+            }
             if (request.Status.HasValue)
             {
                 queryable = queryable.Where(e => e.OrderStatus == request.Status.Value);
             }
 
             var totalRows = await queryable.CountAsync();
-            var orders = await queryable.OrderByDescending(e => e.Id).Skip((request.Page - 1) * request.Limit).Take(request.Limit).ToListAsync();
+            var orders = await queryable.OrderByDescending(e => e.Id)
+            .Skip((request.Page - 1) * request.Limit).Take(request.Limit)
+            .Select(e => new AdminOrderListResponse
+            {
+                Id = e.Id,
+                AvatarUrl = e.Customer.AvatarUrl,
+                NickName = e.Customer.NickName,
+                Createat = e.Createat,
+                OrderNo = e.OrderNo,
+                OrderStatus = e.OrderStatus,
+                PaymentFee = e.PaymentFee,
+                PaymentMethod = e.PaymentMethod,
+                PaymentTime = e.PaymentTime,
+                PaymentType = e.PaymentType,
+                TotalFee = e.TotalFee,
+                ActuallyAmount = e.ActuallyAmount,
+                WalletAmount = e.WalletAmount
+            })
+            .ToListAsync();
 
-            return Result.Ok(new PaginationResponse(request.Page, totalRows, _mapper.Map<List<AdminOrderListResponse>>(orders)));
+            return Result.Ok(new PaginationResponse(request.Page, totalRows, orders));
         }
 
         /// <summary>
@@ -105,22 +127,31 @@ namespace Mytime.Distribution.Controllers
             if (status.Contains(order.OrderStatus)) return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许修改");
 
             var totalCommission = 0;
+            var totalAmount = 0;
             var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
             if (commissions.Count() > 0)
             {
                 foreach (var item in commissions)
                 {
-                    if (item.Status != CommissionStatus.Invalidation) continue;
-
-                    item.Status = CommissionStatus.PendingSettlement;
-                    totalCommission += item.Commission;
+                    if (order.IsFistOrder)
+                    {
+                        totalAmount += item.Commission;
+                        item.Status = CommissionStatus.Complete;
+                        item.SettlementTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        item.Status = CommissionStatus.PendingSettlement;
+                        totalCommission += item.Commission;
+                    }
                 }
             }
 
             order.PaymentType = request.PaymentType;
             order.PaymentMethod = request.PaymentMethod;
             order.PaymentTime = DateTime.Now;
-            order.PaymentFee = order.TotalWithDiscount;
+            order.PaymentFee = order.ActuallyAmount;
+            order.OrderStatus = OrderStatus.PaymentReceived;
 
             _orderRepository.Update(order, false);
 
@@ -128,10 +159,10 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderRepository.SaveAsync();
 
-                if (totalCommission > 0)
+                if (totalCommission > 0 || totalAmount > 0)
                 {
                     var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
-                    await _customerManager.UpdateAssets(parentId, totalCommission, 0);
+                    await _customerManager.UpdateAssets(parentId, totalCommission, totalAmount, "下级首单返佣金");
                 }
 
                 if (!string.IsNullOrEmpty(order.ExtendParams))
@@ -160,22 +191,9 @@ namespace Mytime.Distribution.Controllers
         [HttpPut("cancel/{id}")]
         public async Task<Result> Cancel(int id)
         {
-            var order = await _orderRepository.Query()
-            .Include(e => e.OrderItems).ThenInclude(e => e.CommissionHistory)
-            .FirstOrDefaultAsync(e => e.Id == id);
+            var order = await _orderRepository.Query().FirstOrDefaultAsync(e => e.Id == id);
             if (order == null) return Result.Fail(ResultCodes.IdInvalid);
             if (order.OrderStatus != OrderStatus.PendingPayment) return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许修改");
-
-            var totalCommision = 0;
-            var commissions = order.OrderItems.Where(e => e.CommissionHistory != null).Select(e => e.CommissionHistory);
-            if (commissions.Count() > 0)
-            {
-                foreach (var item in commissions)
-                {
-                    item.Status = CommissionStatus.Invalidation;
-                    totalCommision += item.Commission;
-                }
-            }
 
             order.OrderStatus = OrderStatus.Canceled;
             order.CancelReason = "手动取消";
@@ -186,12 +204,6 @@ namespace Mytime.Distribution.Controllers
             using (var transaction = _orderRepository.BeginTransaction())
             {
                 await _orderRepository.SaveAsync();
-
-                if (totalCommision > 0)
-                {
-                    var parentId = commissions.Select(e => e.CustomerId).FirstOrDefault();
-                    await _customerManager.UpdateAssets(parentId, -totalCommision, 0);
-                }
 
                 transaction.Commit();
             }

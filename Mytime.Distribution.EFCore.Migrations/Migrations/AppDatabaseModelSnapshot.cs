@@ -166,6 +166,73 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.ToTable("Assets");
                 });
 
+            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.AssetsHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Createat")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<int>("TotalAmount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("AssetsHistory");
+                });
+
+            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.BankCard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("BankCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
+                    b.Property<string>("BankNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
+                    b.Property<DateTime>("Createat")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("BankCard");
+                });
+
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.City", b =>
                 {
                     b.Property<int>("Code")
@@ -234,14 +301,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
-                    b.Property<string>("BankCode")
-                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
-                        .HasMaxLength(32);
-
-                    b.Property<string>("BankNo")
-                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
-                        .HasMaxLength(32);
-
                     b.Property<string>("City")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
@@ -308,6 +367,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.HasIndex("OpenId")
                         .IsUnique();
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("Customer");
                 });
@@ -704,6 +765,14 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime?>("CompleteTime")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("CourierCompany")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<string>("CourierCompanyCode")
+                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
+                        .HasMaxLength(128);
+
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
 
@@ -757,18 +826,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime?>("RefundTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("CourierCompany")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<string>("CourierCompanyCode")
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
-                        .HasMaxLength(128);
-
-                    b.Property<string>("TrackingNumber")
-                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
-                        .HasMaxLength(32);
-
                     b.Property<string>("Remarks")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
@@ -778,6 +835,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.Property<DateTime?>("ShippingTime")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
 
                     b.Property<DateTime?>("WarrantyDeadline")
                         .HasColumnType("datetime(6)");
@@ -795,6 +856,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("ActuallyAmount")
                         .HasColumnType("int");
 
                     b.Property<string>("CancelReason")
@@ -851,7 +915,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("TotalFee")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalWithDiscount")
+                    b.Property<int>("WalletAmount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -876,8 +940,20 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("OriginalPrice")
+                        .HasColumnType("int");
+
                     b.Property<byte>("PartnerRole")
                         .HasColumnType("tinyint unsigned");
+
+                    b.Property<int>("ReferralCommissionRatio")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RepurchaseCommissionRatio")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalAmount")
+                        .HasColumnType("int");
 
                     b.Property<int>("TotalQuantity")
                         .HasColumnType("int");
@@ -1038,8 +1114,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasMaxLength(512);
 
                     b.Property<string>("CourierCompanyCode")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
+                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
+                        .HasMaxLength(128);
 
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
@@ -1195,6 +1271,14 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("Amount")
                         .HasColumnType("int");
 
+                    b.Property<string>("BankCode")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
+                    b.Property<string>("BankNo")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
 
@@ -1204,17 +1288,22 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("HandlingFee")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsSuccess")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("Message")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
 
                     b.Property<string>("PartnerTradeNo")
                         .IsRequired()
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
                         .HasMaxLength(32);
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint unsigned");
 
                     b.Property<int>("Total")
                         .HasColumnType("int");
@@ -1267,6 +1356,24 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.AssetsHistory", b =>
+                {
+                    b.HasOne("Mytime.Distribution.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.BankCard", b =>
+                {
+                    b.HasOne("Mytime.Distribution.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.City", b =>
                 {
                     b.HasOne("Mytime.Distribution.Domain.Entities.Province", "Province")
@@ -1286,6 +1393,14 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .WithOne("CommissionHistory")
                         .HasForeignKey("Mytime.Distribution.Domain.Entities.CommissionHistory", "OrderItemId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.Customer", b =>
+                {
+                    b.HasOne("Mytime.Distribution.Domain.Entities.Customer", "Parent")
+                        .WithMany("Childrens")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.CustomerAddress", b =>

@@ -9,6 +9,7 @@ namespace Mytime.Distribution.EFCore.EntityConfiguration
         public void Configure(EntityTypeBuilder<Customer> builder)
         {
             builder.HasIndex(e => e.OpenId).IsUnique();
+            builder.HasMany(e => e.Childrens).WithOne(e => e.Parent).HasForeignKey(e => e.ParentId).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

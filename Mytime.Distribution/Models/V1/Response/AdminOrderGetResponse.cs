@@ -25,10 +25,15 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int TotalFee { get; set; }
         /// <summary>
-        /// 总优惠金额
+        /// 实付金额
         /// </summary>
         /// <value></value>
-        public int TotalWithDiscount { get; set; }
+        public int ActuallyAmount { get; set; }
+        /// <summary>
+        /// 钱包金额
+        /// </summary>
+        /// <value></value>
+        public int WalletAmount { get; set; }
         /// <summary>
         /// 订单状态
         /// </summary>

@@ -52,8 +52,11 @@ namespace Mytime.Distribution.Mapper
             CreateMap<WithdrawalHistory, AdminWithdrawalHistoryResponse>();
             CreateMap<CommissionHistory, CommissionHistoryResponse>();
             CreateMap<CommissionHistory, AdminCommissionHistoryResponse>();
+            CreateMap<BankCard, BankCardResponse>();
 
             CreateMap<PartnerApply, AdminPartnerApplyGetResponse>()
+            .ForMember(s => s.Goods, o => o.MapFrom(s => s.PartnerApplyGoods));
+            CreateMap<PartnerApply, PartnerApplyConditionResponse>()
             .ForMember(s => s.Goods, o => o.MapFrom(s => s.PartnerApplyGoods));
             CreateMap<PartnerApply, AdminPartnerApplyListResponse>();
             CreateMap<PartnerApplyGoods, AdminPartnerApplyGoodsGetResponse>()

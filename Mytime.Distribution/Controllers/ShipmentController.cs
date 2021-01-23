@@ -341,7 +341,7 @@ namespace Mytime.Distribution.Controllers
                     Createat = DateTime.Now
                 };
             }
-            else if (request.ShippingAddress != null)
+            else if (request.ShippingAddress != null && !string.IsNullOrEmpty(request.ShippingAddress.UserName))
             {
                 shippingAddress = new ShippingAddress
                 {
@@ -397,52 +397,7 @@ namespace Mytime.Distribution.Controllers
                 Name = shippingAddress.UserName,
                 Tel = shippingAddress.TelNumber,
             };
-            await _adminUserManager.ShippingApplyNotify(notify);
-
-            return Result.Ok();
-        }
-
-        /// <summary>
-        /// 删除装货申请 (无效接口)
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpDelete("{id}")]
-        public async Task<Result> Delete(int id)
-        {
-            var shipment = await _shipmentRepository.Query()
-            .Include(e => e.ShipmentOrderItems).ThenInclude(e => e.OrderItem)
-            .FirstOrDefaultAsync(e => e.Id == id);
-            if (shipment == null) return Result.Fail(ResultCodes.IdInvalid);
-
-            if (shipment.ShippingStatus != ShippingStatus.PendingShipment) return Result.Fail(ResultCodes.RequestParamError, "当前状态不允许删除");
-            var orderItems = shipment.ShipmentOrderItems.Select(e => e.OrderItem).ToList();
-            var goodsIds = orderItems.Select(e => e.GoodsId);
-            var goodses = await _goodsRepository.Query().Where(e => goodsIds.Contains(e.Id)).ToListAsync();
-            foreach (var item in orderItems)
-            {
-                var goods = goodses.FirstOrDefault(e => e.Id == item.GoodsId);
-                if (goods != null)
-                {
-                    goods.StockQuantity += item.Quantity;
-                }
-
-                item.ShippingStatus = ShippingStatus.Default;
-                item.ShippingTime = null;
-            }
-
-            _shipmentRepository.Remove(shipment, false);
-
-            using (var transaction = _shipmentRepository.BeginTransaction())
-            {
-                await _shipmentRepository.SaveAsync();
-
-                // await _orderItemRepository.UpdateRangeAsync(orderItems);
-
-                await _goodsRepository.UpdateRangeAsync(goodses);
-
-                transaction.Commit();
-            }
+            await _adminUserManager.AfterSaleNotify(notify);
 
             return Result.Ok();
         }

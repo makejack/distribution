@@ -9,6 +9,11 @@ namespace Mytime.Distribution.Models.V1.Response
     public class RefundGetResponse
     {
         /// <summary>
+        /// Id
+        /// </summary>
+        /// <value></value>
+        public int Id { get; set; }
+        /// <summary>
         /// 商品Id
         /// </summary>
         /// <value></value>
