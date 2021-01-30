@@ -1,14 +1,8 @@
-using System;
-
 namespace Mytime.Distribution.Domain.Shared
 {
-    /// <summary>
-    /// 退款状态
-    /// </summary>
-    public enum RefundStatus : byte
+    public enum OrderItemStatus : byte
     {
         Default = 0,
-
         /// <summary>
         /// 申请失败
         /// </summary>
@@ -28,10 +22,25 @@ namespace Mytime.Distribution.Domain.Shared
         /// 退还商品
         /// </summary>
         ReturnGoods = 4,
-        
+
         /// <summary>
         /// 完成退货
         /// </summary>
         CompleteRefund = 5,
+
+        /// <summary>
+        /// 等待发货
+        /// </summary>
+        PendingShipment = 100,
+
+        /// <summary>
+        /// 已出货
+        /// </summary>
+        Shipped = 101,
+        
+        /// <summary>
+        /// 完成
+        /// </summary>
+        Complete = 200
     }
 }

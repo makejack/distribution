@@ -70,17 +70,20 @@ namespace Mytime.Distribution.Mapper
             .ForMember(s => s.Items, o => o.MapFrom(s => s.OrderItems))
             .ForMember(s => s.Billing, o => o.MapFrom(s => s.OrderBilling));
             CreateMap<OrderItem, AdminOrderItemResponse>();
-            CreateMap<OrderItem, AdminRefundListResponse>()
-            .ForMember(s => s.OrderNo, o => o.MapFrom(s => s.Order.OrderNo))
-            .ForMember(s => s.CustomerId, o => o.MapFrom(s => s.Order.CustomerId))
-            .ForMember(s => s.CustomerName, o => o.MapFrom(s => s.Order.Customer.NickName))
-            .ForMember(s => s.AvatarUrl, o => o.MapFrom(s => s.Order.Customer.AvatarUrl));
-            CreateMap<OrderItem, ShipmentListOrderItemResponse>();
+            CreateMap<OrderItem, ShipmentListOrderItemResponse>()
+            .ForMember(s => s.RefundStatus, o => o.MapFrom(s => s.Status));
             CreateMap<OrderItem, ShipmentPendingListResponse>();
             CreateMap<OrderItem, RefundGetResponse>()
-            .ForMember(s => s.Address, o => o.MapFrom(s => s.ReturnAddress));
+            .ForMember(s => s.RefundStatus, o => o.MapFrom(s => s.Status))
+            .ForMember(s => s.RefundReason, o => o.MapFrom(s => s.ReturnApply.Reason))
+            .ForMember(s => s.RefundApplyTime, o => o.MapFrom(s => s.ReturnApply.Createat))
+            .ForMember(s => s.RefundTime, o => o.MapFrom(s => s.ReturnApply.RefundTime))
+            .ForMember(s => s.RefundAmount, o => o.MapFrom(s => s.ReturnApply.RefundAmount))
+            .ForMember(s => s.Address, o => o.MapFrom(s => s.ReturnApply.ReturnAddress));
             CreateMap<ReturnAddress, ReturnAddressResponse>();
             CreateMap<OrderBilling, AdminOrderBillingResponse>();
+            CreateMap<ReturnApply, AdminRefundGetResponse>()
+            .ForMember(s => s.Goods, o => o.MapFrom(s => s.OrderItem));
 
             CreateMap<Shipment, AdminShipmentListResponse>()
             .ForMember(s => s.Address, o => o.MapFrom(s => s.ShippingAddress));

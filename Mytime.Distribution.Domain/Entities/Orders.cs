@@ -61,7 +61,7 @@ namespace Mytime.Distribution.Domain.Entities
         /// 是否第一笔订单
         /// </summary>
         /// <value></value>
-        public bool IsFistOrder { get; set; }
+        public bool IsFirstOrder { get; set; }
 
         public virtual List<OrderItem> OrderItems { get; set; }
         public virtual OrderBilling OrderBilling { get; set; }

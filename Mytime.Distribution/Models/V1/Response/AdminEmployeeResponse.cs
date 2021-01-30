@@ -29,6 +29,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public EmployeeRole Role { get; set; }
         /// <summary>
+        /// 是否超级管理员
+        /// </summary>
+        /// <value></value>
+        public bool IsAdmin { get; set; }
+        /// <summary>
         /// 电话号码
         /// </summary>
         /// <value></value>

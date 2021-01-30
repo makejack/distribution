@@ -34,6 +34,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using Mytime.Distribution.Utils.Helpers;
 using Microsoft.AspNetCore.Http;
 using SixLabors.ImageSharp.Formats.Png;
+using System.Net.Http;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -49,8 +50,9 @@ namespace Mytime.Distribution.Controllers
     {
 
         private readonly IWebHostEnvironment _enviromenet;
-        private readonly IHttpContextAccessor _accessor;
+        private readonly IHttpClientFactory _httpFactory;
         private readonly IRepositoryByInt<Customer> _customerRepository;
+        private readonly ICustomerManager _customerManager;
         private readonly IMediator _mediator;
         private readonly ITokenService _tokenService;
         private readonly ILogger _logger;
@@ -60,23 +62,26 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="enviromenet"></param>
-        /// <param name="accessor"></param>
+        /// <param name="httpFactory"></param>
         /// <param name="customerRepository"></param>
+        /// <param name="customerManager"></param>
         /// <param name="mediator"></param>
         /// <param name="tokenService"></param>
         /// <param name="logger"></param>
         /// <param name="mapper"></param>
         public WeChatController(IWebHostEnvironment enviromenet,
-                                IHttpContextAccessor accessor,
+                                IHttpClientFactory httpFactory,
                                 IRepositoryByInt<Customer> customerRepository,
+                                ICustomerManager customerManager,
                                 IMediator mediator,
                                 ITokenService tokenService,
                                 ILogger<WeChatController> logger,
                                 IMapper mapper)
         {
             _enviromenet = enviromenet;
-            _accessor = accessor;
+            _httpFactory = httpFactory;
             _customerRepository = customerRepository;
+            _customerManager = customerManager;
             _mediator = mediator;
             _tokenService = tokenService;
             _logger = logger;
@@ -223,15 +228,15 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("qrcode")]
         public async Task<Result> QRCode()
         {
-            var userId = HttpContext.GetUserId();
+            var user = await _customerManager.GetUserAsync();
             var appId = WechatService.WxOpenAppId;
-            var scene = $"id={userId}";
+            var scene = $"id={user.Id}";
             var page = "pages/index/index";
             try
             {
-                var myShareCodePath = Path.Combine("images", "sharecodes", userId + ".png");
+                var myShareCodePath = Path.Combine("images", "sharecodes", user.Id + ".png");
                 var physicalPath = Path.Combine(_enviromenet.WebRootPath, myShareCodePath);
-                var httpPath = _accessor.HttpContext.Request.GetHostUrl() + "/" + myShareCodePath.Replace(@"\", "/");
+                var httpPath = Request.GetHostUrl() + "/" + myShareCodePath.Replace(@"\", "/");
                 if (System.IO.File.Exists(physicalPath))
                 {
                     return Result.Ok(httpPath);
@@ -251,10 +256,32 @@ namespace Mytime.Distribution.Controllers
                     if (wxResult.errcode == 0 && stream.Length > 1024)
                     {
                         Image qrCodeImg = Image.Load<Rgba32>(stream.GetBuffer());
-                        qrCodeImg = qrCodeImg.Clone(e => e.Resize(211, 211));
+
+                        if (!string.IsNullOrEmpty(user.AvatarUrl))
+                        {
+                            using (var httpClient = _httpFactory.CreateClient())
+                            {
+                                var response = await httpClient.GetAsync(user.AvatarUrl);
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    var avatarStream = await response.Content.ReadAsStreamAsync();
+                                    var avatarPoint = 120;
+                                    var avatarSize = 190;
+                                    var avatarImg = Image.Load<Rgba32>(avatarStream).Clone(e => e.ConvertToAvatar(new Size(avatarSize, avatarSize), avatarSize / 2));
+                                    qrCodeImg.Mutate(e =>
+                                    {
+                                        e.DrawImage(avatarImg, new Point(avatarPoint, avatarPoint), 1);
+                                    });
+                                }
+                            }
+                        }
+
+                        var qrSize = 211;
+                        var qrPoint = new Point(270, 620);
+                        qrCodeImg = qrCodeImg.Clone(e => e.Resize(qrSize, qrSize));
                         backgroundImg.Mutate(e =>
                         {
-                            e.DrawImage(qrCodeImg, new Point(270, 620), 1);
+                            e.DrawImage(qrCodeImg, qrPoint, 1);
                         });
                         using (var ms = new MemoryStream())
                         {

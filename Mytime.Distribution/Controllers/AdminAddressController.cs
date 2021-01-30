@@ -190,7 +190,7 @@ namespace Mytime.Distribution.Controllers
                 }
             }
 
-            address.IsDefault = true;
+            address.IsDefault = !address.IsDefault;
 
             await _addressRepository.UpdateProperyAsync(address, nameof(address.IsDefault));
 

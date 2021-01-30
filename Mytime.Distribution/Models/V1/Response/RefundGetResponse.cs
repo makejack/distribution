@@ -52,7 +52,7 @@ namespace Mytime.Distribution.Models.V1.Response
         /// 退款状态 1=申请失败 ,2=退货申请,3=确认申请,4=退还商品,5=完成退货
         /// </summary>
         /// <value></value>
-        public RefundStatus RefundStatus { get; set; }
+        public OrderItemStatus RefundStatus { get; set; }
         /// <summary>
         /// 退货理由
         /// </summary>

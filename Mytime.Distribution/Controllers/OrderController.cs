@@ -171,20 +171,12 @@ namespace Mytime.Distribution.Controllers
                         GoodsMediaUrl = item.ThumbnailImage?.Url,
                         Quantity = 1,
                         Remarks = first.Remarks,
-                        ShippingStatus = ShippingStatus.Default,
+                        Status = OrderItemStatus.Default,
                         Createat = DateTime.Now,
                     };
-                    if (user.ParentId.HasValue && commission > 0)
-                    {
-                        orderItem.CommissionHistory = new CommissionHistory
-                        {
-                            CustomerId = user.ParentId.Value,
-                            Commission = commission,
-                            Percentage = (int)(commissionRatio * 100),
-                            Status = CommissionStatus.Invalidation,
-                            Createat = DateTime.Now,
-                        };
-                    }
+
+                    orderItem.SetCommissionHistory(user.ParentId, commission, (int)(commissionRatio * 100), CommissionStatus.Invalidation);
+
                     orderItems.Add(orderItem);
                 }
             }
@@ -192,25 +184,17 @@ namespace Mytime.Distribution.Controllers
             var totalFee = orderItems.Sum(e => e.Quantity * e.GoodsPrice);
             var actuallyAmount = orderItems.Sum(e => e.Quantity * e.DiscountAmount);
             var walletAmount = 0; //钱包扣除金额
+            var needPay = true; //需要支付
             if (request.IsUseWallet)
             {
                 assets = await _assetsRepository.Query().FirstOrDefaultAsync(e => e.CustomerId == user.Id);
                 if (assets.AvailableAmount > 0)
                 {
-                    if (assets.AvailableAmount > actuallyAmount)
-                    {
-                        walletAmount = assets.AvailableAmount - actuallyAmount;
-                    }
-                    else
-                    {
-                        walletAmount = actuallyAmount - assets.AvailableAmount;
-                    }
-                    double ratio = ((double)walletAmount / actuallyAmount);
-                    actuallyAmount -= walletAmount;
+                    walletAmount = assets.AvailableAmount >= actuallyAmount ? actuallyAmount : assets.AvailableAmount;
+                    needPay = (actuallyAmount - walletAmount) > 0;
                     foreach (var item in orderItems)
                     {
-                        item.DiscountAmount -= (int)(item.DiscountAmount * ratio);
-                        if (actuallyAmount == 0)
+                        if (!needPay && item.CommissionHistory != null)
                         {
                             item.CommissionHistory.Status = CommissionStatus.PendingSettlement;
                         }
@@ -221,16 +205,16 @@ namespace Mytime.Distribution.Controllers
             var order = new Orders(GenerateHelper.GenOrderNo())
             {
                 CustomerId = user.Id,
-                OrderStatus = actuallyAmount > 0 ? OrderStatus.PendingPayment : OrderStatus.PaymentReceived,
+                OrderStatus = needPay ? OrderStatus.PendingPayment : OrderStatus.PaymentReceived,
                 PaymentType = request.PaymentType,
-                PaymentMethod = actuallyAmount == 0 ? PaymentMethods.Wallet : PaymentMethods.Wechat,
+                PaymentMethod = !needPay ? PaymentMethods.Wallet : PaymentMethods.Wechat,
                 Remarks = request.Remarks,
                 Createat = DateTime.Now,
                 TotalFee = totalFee,
                 ActuallyAmount = actuallyAmount,
                 WalletAmount = walletAmount,
                 ExtendParams = extendParams,
-                PaymentTime = actuallyAmount == 0 ? DateTime.Now : timeNull,
+                PaymentTime = !needPay ? DateTime.Now : timeNull,
                 OrderItems = orderItems,
             };
 
@@ -240,19 +224,26 @@ namespace Mytime.Distribution.Controllers
             {
                 await _orderRepository.SaveAsync();
 
-                if (user.ParentId.HasValue && actuallyAmount == 0 && totalCommission > 0)
+                if (user.ParentId.HasValue && !needPay && totalCommission > 0)
                 {
                     await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission);
                 }
 
-                if (actuallyAmount == 0 && walletAmount > 0)
+                if (!needPay && walletAmount > 0)
                 {
                     await _customerManager.UpdateAssets(assets, -walletAmount, "商品抵扣");
                 }
 
                 transaction.Commit();
             }
-            return Result.Ok(_mapper.Map<OrderCreateResponse>(order));
+            if (needPay)
+            {
+                return Result.Ok(_mapper.Map<OrderCreateResponse>(order));
+            }
+            else
+            {
+                return Result.Fail(ResultCodes.BalancePayment);
+            }
         }
 
         /// <summary>
@@ -302,7 +293,6 @@ namespace Mytime.Distribution.Controllers
             // var applyGoodses = partnerApply.PartnerApplyGoods;
             var goodsQuantity = partnerApply.PartnerApplyGoods.Sum(e => e.Quantity);
             var averagePrice = partnerApply.TotalAmount / goodsQuantity;
-            var remainder = partnerApply.TotalAmount % goodsQuantity;
             var quantity = 0;
             var orderItems = new List<OrderItem>();
             foreach (var item in partnerApply.PartnerApplyGoods)
@@ -311,7 +301,7 @@ namespace Mytime.Distribution.Controllers
                 quantity += item.Quantity;
                 if (quantity == goodsQuantity)
                 {
-                    averagePrice += remainder;
+                    averagePrice = partnerApply.TotalAmount - ((quantity - 1) * averagePrice);
                 }
                 var commission = (int)(averagePrice * commissionRatio);
                 for (int i = 0; i < item.Quantity; i++)
@@ -327,22 +317,12 @@ namespace Mytime.Distribution.Controllers
                         GoodsMediaUrl = item.Goods.ThumbnailImage?.Url,
                         Quantity = 1,
                         Remarks = string.Empty,
-                        ShippingStatus = ShippingStatus.Default,
+                        Status = OrderItemStatus.Default,
                         Createat = DateTime.Now,
                         IsFirstBatchGoods = true
                     };
 
-                    if (user.ParentId.HasValue && commission > 0)
-                    {
-                        orderItem.CommissionHistory = new CommissionHistory
-                        {
-                            CustomerId = user.ParentId.Value,
-                            Commission = commission,
-                            Percentage = (int)(commissionRatio * 100),
-                            Status = CommissionStatus.Invalidation,
-                            Createat = DateTime.Now,
-                        };
-                    }
+                    orderItem.SetCommissionHistory(user.ParentId, commission, (int)(commissionRatio * 100), CommissionStatus.Invalidation);
 
                     orderItems.Add(orderItem);
                 }
@@ -355,10 +335,10 @@ namespace Mytime.Distribution.Controllers
                 PaymentType = request.PaymentType,
                 Remarks = request.Remarks,
                 Createat = DateTime.Now,
-                TotalFee = partnerApply.OriginalPrice,
+                TotalFee = partnerApply.OriginalPrice == 0 ? partnerApply.TotalAmount : partnerApply.OriginalPrice,
                 ActuallyAmount = partnerApply.TotalAmount,
                 ExtendParams = extendParams,
-                IsFistOrder = true,
+                IsFirstOrder = true,
                 OrderItems = orderItems
             };
 
@@ -423,6 +403,7 @@ namespace Mytime.Distribution.Controllers
                 return Result.Fail(ResultCodes.RequestParamError, "当前订单状态不允许付款");
 
             if (order.ActuallyAmount <= 0) return Result.Fail(ResultCodes.RequestParamError, "订单金额不能为0");
+            if (order.ActuallyAmount - order.WalletAmount <= 0) return Result.Fail(ResultCodes.RequestParamError, "订单金额不能为0");
 
             var user = await _customerManager.GetUserAsync();
             try
@@ -431,7 +412,7 @@ namespace Mytime.Distribution.Controllers
                 {
                     OrderNo = order.OrderNo,
                     OpenId = user.OpenId,
-                    TotalFee = order.ActuallyAmount,
+                    TotalFee = order.ActuallyAmount - order.WalletAmount,
                     Subject = "大脉商城",
                 });
 

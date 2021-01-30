@@ -9,9 +9,9 @@ namespace Mytime.Distribution.Domain.Entities
     /// </summary>
     public class ReturnAddress : AggregateRoot
     {
-        public int OrderItemId { get; set; }
-        [ForeignKey("OrderItemId")]
-        public virtual OrderItem OrderItem { get; set; }
+        public int ReturnApplyId { get; set; }
+        [ForeignKey("ReturnApplyId")]
+        public virtual ReturnApply ReturnApply { get; set; }
         [Required]
         [MaxLength(32)]
         public string PostalCode { get; set; }

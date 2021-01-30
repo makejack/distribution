@@ -81,6 +81,9 @@ namespace Mytime.Distribution.Controllers
         [HttpPost]
         public async Task<Result> Create([FromBody] AdminEmployeeCreateRequest request)
         {
+            var anyName = await _repository.Query().AnyAsync(e => e.Name == request.Name);
+            if (anyName) return Result.Fail(ResultCodes.UserExists);
+
             var user = new AdminUser
             {
                 Name = request.Name,
@@ -108,7 +111,10 @@ namespace Mytime.Distribution.Controllers
             if (user == null) return Result.Fail(ResultCodes.IdInvalid);
 
             user.NickName = request.NickName;
-            user.Role = request.Role;
+            if (!user.IsAdmin)
+            {
+                user.Role = request.Role;
+            }
             user.Tel = request.Tel;
 
             await _repository.UpdateAsync(user);

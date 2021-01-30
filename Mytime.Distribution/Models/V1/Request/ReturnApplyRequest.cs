@@ -1,3 +1,5 @@
+using Mytime.Distribution.Domain.Shared;
+
 namespace Mytime.Distribution.Models.V1.Request
 {
     /// <summary>
@@ -10,6 +12,16 @@ namespace Mytime.Distribution.Models.V1.Request
         /// </summary>
         /// <value></value>
         public int Id { get; set; }
+        /// <summary>
+        /// 退货类型
+        /// </summary>
+        /// <value></value>
+        public ReturnTypes ReturnType { get; set; }
+        /// <summary>
+        /// 物流状态
+        /// </summary>
+        /// <value></value>
+        public ReturnLogisticsStatus LogisticsStatus { get; set; }
         /// <summary>
         /// 退货原因
         /// </summary>

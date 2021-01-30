@@ -54,11 +54,11 @@ namespace Mytime.Distribution.Services
 
             var orderItems = shipment.ShipmentOrderItems.Select(e => e.OrderItem);
             var totalCommission = 0;
+            var states = new[] { OrderItemStatus.ApplyFaild, OrderItemStatus.Shipped };
             foreach (var item in orderItems)
             {
-                var RefundState = new[] { RefundStatus.ApplyFaild, RefundStatus.Default };
-                if (!RefundState.Contains(item.RefundStatus)) continue;
-                item.ShippingStatus = ShippingStatus.Complete;
+                if (!states.Contains(item.Status)) continue;
+                item.Status = OrderItemStatus.Complete;
                 item.CompleteTime = DateTime.Now;
                 item.WarrantyDeadline = DateTime.Now.AddYears(1);
 

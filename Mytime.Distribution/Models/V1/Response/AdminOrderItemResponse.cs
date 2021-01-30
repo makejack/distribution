@@ -54,15 +54,10 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public string Remarks { get; set; }
         /// <summary>
-        /// 发货状态
+        /// 状态
         /// </summary>
         /// <value></value>
-        public ShippingStatus ShippingStatus { get; set; }
-        /// <summary>
-        /// 发货时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? ShippingTime { get; set; }
+        public OrderItemStatus Status { get; set; }
         /// <summary>
         /// 完成时间
         /// </summary>

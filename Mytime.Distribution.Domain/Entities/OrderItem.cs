@@ -48,16 +48,7 @@ namespace Mytime.Distribution.Domain.Entities
 
         [MaxLength(512)]
         public string Remarks { get; set; }
-        /// <summary>
-        /// 发货状态
-        /// </summary>
-        /// <value></value>
-        public ShippingStatus ShippingStatus { get; set; }
-        /// <summary>
-        /// 发货时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? ShippingTime { get; set; }
+        public OrderItemStatus Status { get; set; }
         /// <summary>
         /// 完成时间
         /// </summary>
@@ -68,54 +59,30 @@ namespace Mytime.Distribution.Domain.Entities
         /// </summary>
         /// <value></value>
         public DateTime? WarrantyDeadline { get; set; }
-        /// <summary>
-        /// 退款状态
-        /// </summary>
-        /// <value></value>
-        public RefundStatus RefundStatus { get; set; }
-        /// <summary>
-        /// 退货理由
-        /// </summary>
-        /// <value></value>
-        [MaxLength(512)]
-        public string RefundReason { get; set; }
-        /// <summary>
-        /// 退货申请时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? RefundApplyTime { get; set; }
-        /// <summary>
-        /// 退货时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? RefundTime { get; set; }
-        /// <summary>
-        /// 退款金额
-        /// </summary>
-        /// <value></value>
-        public int RefundAmount { get; set; }
-        /// <summary>
-        /// 快递公司
-        /// </summary>
-        /// <value></value>
-        [MaxLength(512)]
-        public string CourierCompany { get; set; }
-        /// <summary>
-        /// 快递公司Code
-        /// </summary>
-        /// <value></value>
-        [MaxLength(128)]
-        public string CourierCompanyCode { get; set; }
-        /// <summary>
-        /// 快递单号
-        /// </summary>
-        /// <value></value>
-        [MaxLength(32)]
-        public string TrackingNumber { get; set; }
         public DateTime Createat { get; set; }
 
         public virtual CommissionHistory CommissionHistory { get; set; }
         public virtual List<ShipmentOrderItem> ShipmentOrderItems { get; set; }
-        public virtual ReturnAddress ReturnAddress { get; set; }
+        public virtual ReturnApply ReturnApply { get; set; }
+
+        /// <summary>
+        /// 设置佣金
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <param name="commission"></param>
+        /// <param name="percentage"></param>
+        /// <param name="status"></param>
+        public void SetCommissionHistory(int? customerId, int commission, int percentage, CommissionStatus status)
+        {
+            if (!customerId.HasValue || commission == 0) return;
+            this.CommissionHistory = new CommissionHistory
+            {
+                CustomerId = customerId.Value,
+                Commission = commission,
+                Percentage = percentage,
+                Status = status,
+                Createat = DateTime.Now
+            };
+        }
     }
 }

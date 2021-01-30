@@ -93,6 +93,7 @@ namespace Mytime.Distribution.Controllers
             var anyPartnerType = _partnerApplyRepository.Query().Any(e => e.PartnerRole == request.PartnerRole);
             if (anyPartnerType) return Result.Fail(ResultCodes.RequestParamError, "当前合伙人类型已设置申请条件");
             if (request.Goods == null || request.Goods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "请选择商品");
+            if (request.TotalAmount == 0) return Result.Fail(ResultCodes.RequestParamError, "总金额不能为0");
 
             var partnerApply = new PartnerApply
             {
@@ -130,6 +131,7 @@ namespace Mytime.Distribution.Controllers
             .FirstOrDefaultAsync(e => e.Id == request.Id);
             if (partnerApply == null) return Result.Fail(ResultCodes.IdInvalid);
             if (request.Goods == null || request.Goods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "请选择商品");
+            if (request.TotalAmount == 0) return Result.Fail(ResultCodes.RequestParamError, "总金额不能为0");
 
             if (partnerApply.PartnerRole != request.PartnerRole)
             {

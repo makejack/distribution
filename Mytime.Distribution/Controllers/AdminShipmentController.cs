@@ -128,8 +128,7 @@ namespace Mytime.Distribution.Controllers
                 var orderItems = shipment.ShipmentOrderItems.Select(e => e.OrderItem);
                 foreach (var item in orderItems)
                 {
-                    item.ShippingStatus = ShippingStatus.Shipped;
-                    item.ShippingTime = DateTime.Now;
+                    item.Status = OrderItemStatus.Shipped;
                 }
 
                 var message = new AutoReceivedShippingEvent

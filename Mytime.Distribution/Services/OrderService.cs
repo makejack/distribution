@@ -66,7 +66,7 @@ namespace Mytime.Distribution.Services
             {
                 foreach (var item in commissions)
                 {
-                    if (order.IsFistOrder)
+                    if (order.IsFirstOrder)
                     {
                         totalAmount += item.Commission;
                         item.Status = CommissionStatus.Complete;

@@ -24,7 +24,7 @@ namespace Mytime.Distribution.Controllers
     public class ShippingController : ControllerBase
     {
         private readonly IRepositoryByInt<Shipment> _shipmentRepository;
-        private readonly IRepositoryByInt<OrderItem> _orderItemRepository;
+        private readonly IRepositoryByInt<ReturnApply> _returnApplyRepository;
         private readonly IPackageService _packageService;
         private readonly IMapper _mapper;
 
@@ -32,16 +32,16 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="shipmentRepository"></param>
-        /// <param name="orderItemRepository"></param>
+        /// <param name="returnApplyRepository"></param>
         /// <param name="packageService"></param>
         /// <param name="mapper"></param>
         public ShippingController(IRepositoryByInt<Shipment> shipmentRepository,
-        IRepositoryByInt<OrderItem> orderItemRepository,
+                                  IRepositoryByInt<ReturnApply> returnApplyRepository,
                                   IPackageService packageService,
                                   IMapper mapper)
         {
             _shipmentRepository = shipmentRepository;
-            _orderItemRepository = orderItemRepository;
+            _returnApplyRepository = returnApplyRepository;
             _packageService = packageService;
             _mapper = mapper;
         }
@@ -77,16 +77,17 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("return/{id}")]
         public async Task<Result> Return(int id)
         {
-            var item = await _orderItemRepository.Query()
+            var apply = await _returnApplyRepository.Query()
             .Include(e => e.ReturnAddress)
-            .FirstOrDefaultAsync(e => e.Id == id);
-            if (item == null) return Result.Ok(ResultCodes.IdInvalid);
+            .FirstOrDefaultAsync(e => e.OrderItemId == id);
+            if (apply == null) return Result.Ok(ResultCodes.IdInvalid);
 
-            var tel = item.ReturnAddress.TelNumber;
-            var courierCompany = item.CourierCompany;
-            var courierCompanyCode = item.CourierCompanyCode;
+            var returnAddress = apply.ReturnAddress;
+            var tel = returnAddress.TelNumber;
+            var courierCompany = apply.CourierCompany;
+            var courierCompanyCode = apply.CourierCompanyCode;
             // if (string.IsNullOrEmpty(courierCompanyCode)) return Result.Fail(ResultCodes.RequestParamError, "快递公司编码参数无效");
-            var trackingNumber = item.TrackingNumber;
+            var trackingNumber = apply.TrackingNumber;
             // if (string.IsNullOrEmpty(trackingNumber)) return Result.Fail(ResultCodes.RequestParamError, "快递单号无效");
 
             var response = await ShippingQuery(id, tel, courierCompany, courierCompanyCode, trackingNumber);

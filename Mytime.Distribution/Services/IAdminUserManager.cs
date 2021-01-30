@@ -20,10 +20,10 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         Task DevelopmentNotify();
         /// <summary>
-        /// 售后通知
+        /// 仓库通知
         /// </summary>
         /// <param name="notify"></param>
         /// <returns></returns>
-        Task AfterSaleNotify(INotify notify);
+        Task WarehouseNotify(INotify notify);
     }
 }

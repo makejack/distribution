@@ -265,6 +265,12 @@
             <param name="customerRepository"></param>
             <param name="mapper"></param>
         </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminCustomerController.GetAll(System.String)">
+            <summary>
+            获取所有用户
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:Mytime.Distribution.Controllers.AdminCustomerController.List(Mytime.Distribution.Models.V1.Request.AdminCustomerListRequest)">
             <summary>
             顾客列表
@@ -323,6 +329,31 @@
             删除员工
             </summary>
             <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Mytime.Distribution.Controllers.AdminForgetController">
+            <summary>
+            记录密码
+            </summary>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminForgetController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.AdminUser},Mytime.Distribution.Services.ISmsService,AutoMapper.IMapper)">
+            <summary>
+            构造函数
+            </summary>
+            <param name="adminUserRepository"></param>
+            <param name="smsService"></param>
+            <param name="mapper"></param>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminForgetController.ResetPwd(Mytime.Distribution.Models.V1.Request.AdminForgetResetPwdRequest)">
+            <summary>
+            重置密码
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminForgetController.VerifyCode(System.String)">
+            <summary>
+            验证码
+            </summary>
             <returns></returns>
         </member>
         <member name="T:Mytime.Distribution.Controllers.AdminGoodsController">
@@ -512,6 +543,29 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Mytime.Distribution.Controllers.AdminLiteAppController">
+            <summary>
+            后台小程序
+            </summary>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminLiteAppController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.LiteAppSetting})">
+            <summary>
+            构造函数
+            </summary>
+            <param name="repository"></param>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminLiteAppController.Get">
+            <summary>
+            获取设置
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminLiteAppController.Save(Mytime.Distribution.Models.V1.Request.AdminLiteAppSaveRequest)">
+            <summary>
+            保存设置
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:Mytime.Distribution.Controllers.AdminLogController">
             <summary>
             系统日志
@@ -591,12 +645,14 @@
             后台订单管理
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Orders},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Orders},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.PartnerApply},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Goods},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="orderRepository"></param>
             <param name="customerRepository"></param>
+            <param name="partnerApplyRepository"></param>
+            <param name="goodsRepository"></param>
             <param name="customerManager"></param>
             <param name="mapper"></param>
         </member>
@@ -611,6 +667,12 @@
             获取订单详情
             </summary>
             <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminOrderController.Create(Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest)">
+            <summary>
+            添加订单
+            </summary>
             <returns></returns>
         </member>
         <member name="M:Mytime.Distribution.Controllers.AdminOrderController.Edit(Mytime.Distribution.Models.V1.Request.AdminOrderEditRequest)">
@@ -684,11 +746,12 @@
             后台退款管理
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.AdminRefundController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.OrderItem},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.AdminAddress},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.ReturnAddress},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.AdminRefundController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.OrderItem},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.ReturnApply},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.AdminAddress},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.ReturnAddress},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="orderItemRepository"></param>
+            <param name="returnApplyRepository"></param>
             <param name="addressRepository"></param>
             <param name="refundAddressRepository"></param>
             <param name="customerManager"></param>
@@ -711,6 +774,12 @@
         <member name="M:Mytime.Distribution.Controllers.AdminRefundController.ConfirmApply(Mytime.Distribution.Models.V1.Request.AdminRefundConfirmApplyRequest)">
             <summary>
             确认申请
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.AdminRefundController.RefuseApply(Mytime.Distribution.Models.V1.Request.AdminRefundRefuseApplyRequest)">
+            <summary>
+            拒绝
             </summary>
             <returns></returns>
         </member>
@@ -1017,6 +1086,25 @@
             <param name="id"></param>
             <returns></returns>
         </member>
+        <member name="T:Mytime.Distribution.Controllers.LiteAppController">
+            <summary>
+            小程序
+            </summary>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.LiteAppController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.LiteAppSetting},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
+            <summary>
+            构造函数
+            </summary>
+            <param name="repository"></param>
+            <param name="customerManger"></param>
+            <param name="mapper"></param>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.LiteAppController.GetMembershipRights">
+            <summary>
+            获取会员权益内容
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:Mytime.Distribution.Controllers.MediaController">
             <summary>
             媒体
@@ -1146,11 +1234,13 @@
             退款
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.RefundController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.OrderItem},AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.RefundController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.OrderItem},Mytime.Distribution.Services.ICustomerManager,Mytime.Distribution.Services.IAdminUserManager,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="orderItemRepository"></param>
+            <param name="customerManager"></param>
+            <param name="adminUserManager"></param>
             <param name="mapper"></param>
         </member>
         <member name="M:Mytime.Distribution.Controllers.RefundController.Get(System.Int32)">
@@ -1248,12 +1338,12 @@
             运输
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.ShippingController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Shipment},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.OrderItem},Mytime.Distribution.Services.IPackageService,AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.ShippingController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Shipment},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.ReturnApply},Mytime.Distribution.Services.IPackageService,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="shipmentRepository"></param>
-            <param name="orderItemRepository"></param>
+            <param name="returnApplyRepository"></param>
             <param name="packageService"></param>
             <param name="mapper"></param>
         </member>
@@ -1276,13 +1366,14 @@
             微信
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.WeChatController.#ctor(Microsoft.AspNetCore.Hosting.IWebHostEnvironment,Microsoft.AspNetCore.Http.IHttpContextAccessor,Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},MediatR.IMediator,Mytime.Distribution.Services.ITokenService,Microsoft.Extensions.Logging.ILogger{Mytime.Distribution.Controllers.WeChatController},AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.WeChatController.#ctor(Microsoft.AspNetCore.Hosting.IWebHostEnvironment,System.Net.Http.IHttpClientFactory,Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Services.ICustomerManager,MediatR.IMediator,Mytime.Distribution.Services.ITokenService,Microsoft.Extensions.Logging.ILogger{Mytime.Distribution.Controllers.WeChatController},AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
             <param name="enviromenet"></param>
-            <param name="accessor"></param>
+            <param name="httpFactory"></param>
             <param name="customerRepository"></param>
+            <param name="customerManager"></param>
             <param name="mediator"></param>
             <param name="tokenService"></param>
             <param name="logger"></param>
@@ -1895,6 +1986,11 @@
             请求成功
             </summary>
         </member>
+        <member name="F:Mytime.Distribution.Models.ResultCodes.BalancePayment">
+            <summary>
+            余额支付
+            </summary>
+        </member>
         <member name="F:Mytime.Distribution.Models.ResultCodes.RequestParamError">
             <summary>
             请求参数错误
@@ -2107,6 +2203,29 @@
         <member name="P:Mytime.Distribution.Models.V1.Request.AdminEmployeeEditRequest.Tel">
             <summary>
             电话号码
+            </summary>
+            <value></value>
+        </member>
+        <member name="T:Mytime.Distribution.Models.V1.Request.AdminForgetResetPwdRequest">
+            <summary>
+            后台重置密码请求
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminForgetResetPwdRequest.Tel">
+            <summary>
+            手机号
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminForgetResetPwdRequest.Code">
+            <summary>
+            验证码
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminForgetResetPwdRequest.Password">
+            <summary>
+            密码
             </summary>
             <value></value>
         </member>
@@ -2444,6 +2563,64 @@
             </summary>
             <value></value>
         </member>
+        <member name="T:Mytime.Distribution.Models.V1.Request.AdminLiteAppSaveRequest">
+            <summary>
+            后台小程序设置保存请求
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminLiteAppSaveRequest.CityMembershipRights">
+            <summary>
+            城市权益
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminLiteAppSaveRequest.BranchMembershipRights">
+            <summary>
+            网点权益
+            </summary>
+            <value></value>
+        </member>
+        <member name="T:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest">
+            <summary>
+            后台创建订单请求
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.CustomerId">
+            <summary>
+            微信用户Id
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.PartnerRole">
+            <summary>
+            合伙人角色
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.PaymentType">
+            <summary>
+            支付类型
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.PaymentMethod">
+            <summary>
+            支付方式
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.Remarks">
+            <summary>
+            备注
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminOrderCreateRequest.Goods">
+            <summary>
+            商品
+            </summary>
+            <value></value>
+        </member>
         <member name="T:Mytime.Distribution.Models.V1.Request.AdminOrderEditRequest">
             <summary>
             后台修改订单信息
@@ -2643,7 +2820,7 @@
         </member>
         <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundConfirmApplyRequest.Id">
             <summary>
-            退款商品Id
+            Id
             </summary>
             <value></value>
         </member>
@@ -2659,134 +2836,20 @@
             </summary>
             <value></value>
         </member>
-        <member name="T:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse">
+        <member name="T:Mytime.Distribution.Models.V1.Request.AdminRefundRefuseApplyRequest">
             <summary>
-            后台退款详情
+            后台拒绝退货请求
             </summary>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.Id">
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundRefuseApplyRequest.Id">
             <summary>
             Id
             </summary>
             <value></value>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.GoodsId">
+        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundRefuseApplyRequest.AuditMessage">
             <summary>
-            商品Id
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.GoodsName">
-            <summary>
-            商品名称
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.GoodsPrice">
-            <summary>
-            商品价格
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.DiscountAmount">
-            <summary>
-            优惠价格
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.GoodsMediaUrl">
-            <summary>
-            商品地址
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.NormalizedName">
-            <summary>
-            标准化名称
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.RefundStatus">
-            <summary>
-            退款状态
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.RefundAmount">
-            <summary>
-            退款金额
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.RefundApplyTime">
-            <summary>
-            退款申请时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.RefundTime">
-            <summary>
-            退款时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.CompleteTime">
-            <summary>
-            完成时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.RefundReason">
-            <summary>
-            退货理由
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.CourierCompany">
-            <summary>
-            快递公司
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.CourierCompanyCode">
-            <summary>
-            快递公司Code
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.TrackingNumber">
-            <summary>
-            快递单号
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.OrderId">
-            <summary>
-            订单Id
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.OrderNo">
-            <summary>
-            订单编号
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.CustomerId">
-            <summary>
-            买家Id
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.CustomerName">
-            <summary>
-            买家名称
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Request.AdminRefundGetResponse.AvatarUrl">
-            <summary>
-            买家头像
+            审核消息
             </summary>
             <value></value>
         </member>
@@ -3220,6 +3283,18 @@
             </summary>
             <value></value>
         </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.ReturnApplyRequest.ReturnType">
+            <summary>
+            退货类型
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Request.ReturnApplyRequest.LogisticsStatus">
+            <summary>
+            物流状态
+            </summary>
+            <value></value>
+        </member>
         <member name="P:Mytime.Distribution.Models.V1.Request.ReturnApplyRequest.Reason">
             <summary>
             退货原因
@@ -3558,6 +3633,12 @@
         <member name="P:Mytime.Distribution.Models.V1.Response.AdminEmployeeResponse.Role">
             <summary>
             角色
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminEmployeeResponse.IsAdmin">
+            <summary>
+            是否超级管理员
             </summary>
             <value></value>
         </member>
@@ -4451,15 +4532,9 @@
             </summary>
             <value></value>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminOrderItemResponse.ShippingStatus">
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminOrderItemResponse.Status">
             <summary>
-            发货状态
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminOrderItemResponse.ShippingTime">
-            <summary>
-            发货时间
+            状态
             </summary>
             <value></value>
         </member>
@@ -4681,6 +4756,119 @@
             </summary>
             <value></value>
         </member>
+        <member name="T:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse">
+            <summary>
+            后台退款详情
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Id">
+            <summary>
+            Id
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.ShipmentId">
+            <summary>
+            装货Id
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.ReturnType">
+            <summary>
+            退货类型
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.LogisticsStatus">
+            <summary>
+            物流状态
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Reason">
+            <summary>
+            原因
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Description">
+            <summary>
+            描述
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.PaymentAmount">
+            <summary>
+            支付金额
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.RefundAmount">
+            <summary>
+            退款金额
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.RefundTime">
+            <summary>
+            退款时间
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Status">
+            <summary>
+            审核状态
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.AuditTime">
+            <summary>
+            审核时间
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.AuditMessage">
+            <summary>
+            审核消息
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.CourierCompany">
+            <summary>
+            快递公司
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.CourierCompanyCode">
+            <summary>
+            快递公司Code
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.TrackingNumber">
+            <summary>
+            快递单号
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Createat">
+            <summary>
+            创建时间
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Goods">
+            <summary>
+            退货商品
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundGetResponse.Customer">
+            <summary>
+            用户
+            </summary>
+            <value></value>
+        </member>
         <member name="T:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse">
             <summary>
             后台退款列表响应
@@ -4692,45 +4880,15 @@
             </summary>
             <value></value>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.GoodsId">
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.Status">
             <summary>
-            商品Id
+            审核状态
             </summary>
             <value></value>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.GoodsName">
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.AuditTime">
             <summary>
-            商品名称
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.GoodsPrice">
-            <summary>
-            商品价格
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.DiscountAmount">
-            <summary>
-            优惠价格
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.GoodsMediaUrl">
-            <summary>
-            商品地址
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.NormalizedName">
-            <summary>
-            标准化名称
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.RefundStatus">
-            <summary>
-            退款状态
+            审核时间
             </summary>
             <value></value>
         </member>
@@ -4740,33 +4898,9 @@
             </summary>
             <value></value>
         </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.RefundApplyTime">
+        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.Createat">
             <summary>
-            退款申请时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.RefundTime">
-            <summary>
-            退款时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.CompleteTime">
-            <summary>
-            完成时间
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.OrderId">
-            <summary>
-            订单Id
-            </summary>
-            <value></value>
-        </member>
-        <member name="P:Mytime.Distribution.Models.V1.Response.AdminRefundListResponse.OrderNo">
-            <summary>
-            订单编号
+            创建时间
             </summary>
             <value></value>
         </member>
@@ -6116,9 +6250,9 @@
             <param name="adminUserRepository"></param>
             <param name="mediator"></param>
         </member>
-        <member name="M:Mytime.Distribution.Services.AdminUserManager.AfterSaleNotify(Mytime.Distribution.Services.SmsContent.INotify)">
+        <member name="M:Mytime.Distribution.Services.AdminUserManager.WarehouseNotify(Mytime.Distribution.Services.SmsContent.INotify)">
             <summary>
-            售后通知
+            仓库通知
             </summary>
             <returns></returns>
         </member>
@@ -6209,9 +6343,9 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Mytime.Distribution.Services.IAdminUserManager.AfterSaleNotify(Mytime.Distribution.Services.SmsContent.INotify)">
+        <member name="M:Mytime.Distribution.Services.IAdminUserManager.WarehouseNotify(Mytime.Distribution.Services.SmsContent.INotify)">
             <summary>
-            售后通知
+            仓库通知
             </summary>
             <param name="notify"></param>
             <returns></returns>
@@ -6714,6 +6848,23 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Mytime.Distribution.Services.SmsContent.ForgetPwdVerifyCodeNotify">
+            <summary>
+            忘记密码验证码通知
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Services.SmsContent.ForgetPwdVerifyCodeNotify.Code">
+            <summary>
+            验证码
+            </summary>
+            <value></value>
+        </member>
+        <member name="M:Mytime.Distribution.Services.SmsContent.ForgetPwdVerifyCodeNotify.Execute">
+            <summary>
+            处理
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:Mytime.Distribution.Services.SmsContent.INotify">
             <summary>
             短信通知
@@ -6743,6 +6894,23 @@
             <value></value>
         </member>
         <member name="M:Mytime.Distribution.Services.SmsContent.NotifyBase.Execute">
+            <summary>
+            执行
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Mytime.Distribution.Services.SmsContent.ReturnNotify">
+            <summary>
+            退货通知
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Services.SmsContent.ReturnNotify.UserName">
+            <summary>
+            买家名称
+            </summary>
+            <value></value>
+        </member>
+        <member name="M:Mytime.Distribution.Services.SmsContent.ReturnNotify.Execute">
             <summary>
             执行
             </summary>
@@ -7105,6 +7273,12 @@
         <member name="M:Mytime.Distribution.Utils.Helpers.GenerateHelper.GenOrderNo">
             <summary>
             生成订单号
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Utils.Helpers.GenerateHelper.VerifyCode(System.Int32)">
+            <summary>
+            验证码
             </summary>
             <returns></returns>
         </member>

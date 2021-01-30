@@ -23,9 +23,14 @@ namespace Mytime.Distribution.Domain.Shared
         [Description("开发人员")]
         Development,
         /// <summary>
-        /// 售后人员
+        /// 仓库管理员
         /// </summary>
-        [Description("售后人员")]
-        AfterSale,
+        [Description("仓库管理员")]
+        Warehouse,
+        /// <summary>
+        /// 商品管理员
+        /// </summary>
+        [Description("商品管理员")]
+        Goods,
     }
 }

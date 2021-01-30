@@ -14,70 +14,25 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int Id { get; set; }
         /// <summary>
-        /// 商品Id
+        /// 审核状态
         /// </summary>
         /// <value></value>
-        public int? GoodsId { get; set; }
+        public ReturnAuditStatus Status { get; set; }
         /// <summary>
-        /// 商品名称
+        /// 审核时间
         /// </summary>
         /// <value></value>
-        public string GoodsName { get; set; }
-        /// <summary>
-        /// 商品价格
-        /// </summary>
-        /// <value></value>
-        public int GoodsPrice { get; set; }
-        /// <summary>
-        /// 优惠价格
-        /// </summary>
-        /// <value></value>
-        public int DiscountAmount { get; set; }
-        /// <summary>
-        /// 商品地址
-        /// </summary>
-        /// <value></value>
-        public string GoodsMediaUrl { get; set; }
-        /// <summary>
-        /// 标准化名称
-        /// </summary>
-        /// <value></value>
-        public string NormalizedName { get; set; }
-        /// <summary>
-        /// 退款状态
-        /// </summary>
-        /// <value></value>
-        public RefundStatus RefundStatus { get; set; }
+        public DateTime? AuditTime { get; set; }
         /// <summary>
         /// 退款金额
         /// </summary>
         /// <value></value>
         public int RefundAmount { get; set; }
         /// <summary>
-        /// 退款申请时间
+        /// 创建时间
         /// </summary>
         /// <value></value>
-        public DateTime? RefundApplyTime { get; set; }
-        /// <summary>
-        /// 退款时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? RefundTime { get; set; }
-        /// <summary>
-        /// 完成时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? CompleteTime { get; set; }
-        /// <summary>
-        /// 订单Id
-        /// </summary>
-        /// <value></value>
-        public int OrderId { get; set; }
-        /// <summary>
-        /// 订单编号
-        /// </summary>
-        /// <value></value>
-        public string OrderNo { get; set; }
+        public DateTime Createat { get; set; }
         /// <summary>
         /// 买家Id
         /// </summary>

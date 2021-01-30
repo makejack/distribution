@@ -814,7 +814,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<string>("ExtendParams")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<bool>("IsFistOrder")
+                    b.Property<bool>("IsFirstOrder")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("OrderNo")

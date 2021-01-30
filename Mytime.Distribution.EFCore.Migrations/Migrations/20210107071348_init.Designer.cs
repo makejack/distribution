@@ -724,7 +724,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("WalletAmount")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsFistOrder")
+                    b.Property<bool>("IsFirstOrder")
                         .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");

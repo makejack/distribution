@@ -1,7 +1,7 @@
 using System;
 using Mytime.Distribution.Domain.Shared;
 
-namespace Mytime.Distribution.Models.V1.Request
+namespace Mytime.Distribution.Models.V1.Response
 {
     /// <summary>
     /// 后台退款详情
@@ -14,65 +14,60 @@ namespace Mytime.Distribution.Models.V1.Request
         /// <value></value>
         public int Id { get; set; }
         /// <summary>
-        /// 商品Id
+        /// 装货Id
         /// </summary>
         /// <value></value>
-        public int? GoodsId { get; set; }
+        public int ShipmentId { get; set; }
         /// <summary>
-        /// 商品名称
+        /// 退货类型
         /// </summary>
         /// <value></value>
-        public string GoodsName { get; set; }
+        public ReturnTypes ReturnType { get; set; }
         /// <summary>
-        /// 商品价格
+        /// 物流状态
         /// </summary>
         /// <value></value>
-        public int GoodsPrice { get; set; }
+        public ReturnLogisticsStatus LogisticsStatus { get; set; }
         /// <summary>
-        /// 优惠价格
+        /// 原因
         /// </summary>
         /// <value></value>
-        public int DiscountAmount { get; set; }
+        public string Reason { get; set; }
         /// <summary>
-        /// 商品地址
+        /// 描述
         /// </summary>
         /// <value></value>
-        public string GoodsMediaUrl { get; set; }
+        public string Description { get; set; }
         /// <summary>
-        /// 标准化名称
+        /// 支付金额
         /// </summary>
         /// <value></value>
-        public string NormalizedName { get; set; }
-        /// <summary>
-        /// 退款状态
-        /// </summary>
-        /// <value></value>
-        public RefundStatus RefundStatus { get; set; }
+        public int PaymentAmount { get; set; }
         /// <summary>
         /// 退款金额
         /// </summary>
         /// <value></value>
         public int RefundAmount { get; set; }
         /// <summary>
-        /// 退款申请时间
-        /// </summary>
-        /// <value></value>
-        public DateTime? RefundApplyTime { get; set; }
-        /// <summary>
         /// 退款时间
         /// </summary>
         /// <value></value>
         public DateTime? RefundTime { get; set; }
         /// <summary>
-        /// 完成时间
+        /// 审核状态
         /// </summary>
         /// <value></value>
-        public DateTime? CompleteTime { get; set; }
+        public ReturnAuditStatus Status { get; set; }
         /// <summary>
-        /// 退货理由
+        /// 审核时间
         /// </summary>
         /// <value></value>
-        public string RefundReason { get; set; }
+        public DateTime? AuditTime { get; set; }
+        /// <summary>
+        /// 审核消息
+        /// </summary>
+        /// <value></value>
+        public string AuditMessage { get; set; }
         /// <summary>
         /// 快递公司
         /// </summary>
@@ -89,30 +84,20 @@ namespace Mytime.Distribution.Models.V1.Request
         /// <value></value>
         public string TrackingNumber { get; set; }
         /// <summary>
-        /// 订单Id
+        /// 创建时间
         /// </summary>
         /// <value></value>
-        public int OrderId { get; set; }
+        public DateTime Createat { get; set; }
         /// <summary>
-        /// 订单编号
+        /// 退货商品
         /// </summary>
         /// <value></value>
-        public string OrderNo { get; set; }
+        public AdminOrderItemResponse Goods { get; set; }
         /// <summary>
-        /// 买家Id
+        /// 用户
         /// </summary>
         /// <value></value>
-        public int CustomerId { get; set; }
-        /// <summary>
-        /// 买家名称
-        /// </summary>
-        /// <value></value>
-        public string CustomerName { get; set; }
-        /// <summary>
-        /// 买家头像
-        /// </summary>
-        /// <value></value>
-        public string AvatarUrl { get; set; }
+        public CustomerResponse Customer { get; set; }
 
     }
 }

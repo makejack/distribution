@@ -17,6 +17,12 @@ namespace Mytime.Distribution.Models
         /// </summary>
         [Description("请求成功")]
         Ok = 0,
+
+        /// <summary>
+        /// 余额支付
+        /// </summary>
+        BalancePayment = 200,
+
         /// <summary>
         /// 请求参数错误
         /// </summary>

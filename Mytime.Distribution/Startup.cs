@@ -112,8 +112,12 @@ namespace Mytime.Distribution
                 o.AllowSynchronousIO = true;
             });
 
+            services.AddDistributedMemoryCache();
             services.AddMemoryCache();
-            // services.AddSession();
+            services.AddSession(o =>
+            {
+                o.IdleTimeout = TimeSpan.FromMinutes(5);
+            });
 
             services.AddControllers(o =>
             {
@@ -295,12 +299,12 @@ namespace Mytime.Distribution
             app.UseStaticFiles();
 
             app.UseRouting();
-            
+
             app.UseCors(POLICY_NAME);
 
             app.UseAuthentication();
             app.UseAuthorization();
-            // app.UseSession();
+            app.UseSession();
 
             UseSenparc(app, env, senparcSetting, senparcWeixinSetting);
 

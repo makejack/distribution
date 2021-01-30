@@ -1,3 +1,4 @@
+using System.Text;
 using System;
 using System.Security.Cryptography;
 using IdGen;
@@ -33,6 +34,22 @@ namespace Mytime.Distribution.Utils.Helpers
         public static long GenOrderNo()
         {
             return _genOrderNo.CreateId();
+        }
+
+
+        /// <summary>
+        /// 验证码
+        /// </summary>
+        /// <returns></returns>
+        public static string VerifyCode(int length)
+        {
+            StringBuilder sb = new StringBuilder();
+            Random r = new Random();
+            for (int i = 0; i < length; i++)
+            {
+                sb.Append(r.Next(0, 9));
+            }
+            return sb.ToString();
         }
     }
 }

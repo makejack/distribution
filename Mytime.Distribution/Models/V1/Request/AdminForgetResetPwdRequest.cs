@@ -1,25 +1,25 @@
-using System;
+using System.Security.AccessControl;
 namespace Mytime.Distribution.Models.V1.Request
 {
     /// <summary>
-    /// 后台确认退款申请
+    /// 后台重置密码请求
     /// </summary>
-    public class AdminRefundConfirmApplyRequest
+    public class AdminForgetResetPwdRequest
     {
         /// <summary>
-        /// Id
+        /// 手机号
         /// </summary>
         /// <value></value>
-        public int Id { get; set; }
+        public string Tel { get; set; }
         /// <summary>
-        /// 退款地址
+        /// 验证码
         /// </summary>
         /// <value></value>
-        public int RefundAddressId { get; set; }
+        public string Code { get; set; }
         /// <summary>
-        /// 备注
+        /// 密码
         /// </summary>
         /// <value></value>
-        public string Remarks { get; set; }
+        public string Password { get; set; }
     }
 }

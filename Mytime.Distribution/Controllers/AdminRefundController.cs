@@ -28,6 +28,7 @@ namespace Mytime.Distribution.Controllers
     public class AdminRefundController : ControllerBase
     {
         private readonly IRepositoryByInt<OrderItem> _orderItemRepository;
+        private readonly IRepositoryByInt<ReturnApply> _returnApplyRepository;
         private readonly IRepositoryByInt<AdminAddress> _addressRepository;
         private readonly IRepositoryByInt<ReturnAddress> _refundAddressRepository;
         private readonly ICustomerManager _customerManager;
@@ -37,17 +38,20 @@ namespace Mytime.Distribution.Controllers
         /// 构造函数
         /// </summary>
         /// <param name="orderItemRepository"></param>
+        /// <param name="returnApplyRepository"></param>
         /// <param name="addressRepository"></param>
         /// <param name="refundAddressRepository"></param>
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public AdminRefundController(IRepositoryByInt<OrderItem> orderItemRepository,
+                                     IRepositoryByInt<ReturnApply> returnApplyRepository,
                                      IRepositoryByInt<AdminAddress> addressRepository,
                                      IRepositoryByInt<ReturnAddress> refundAddressRepository,
                                      ICustomerManager customerManager,
                                      IMapper mapper)
         {
             _orderItemRepository = orderItemRepository;
+            _returnApplyRepository = returnApplyRepository;
             _addressRepository = addressRepository;
             _refundAddressRepository = refundAddressRepository;
             _customerManager = customerManager;
@@ -62,7 +66,7 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("list")]
         public async Task<Result> List([FromQuery] PaginationRequest request)
         {
-            var queryable = _orderItemRepository.Query().Where(e => e.RefundStatus > RefundStatus.Default);
+            var queryable = _returnApplyRepository.Query();
 
             var totalRows = await queryable.CountAsync();
             var refundItems = await queryable
@@ -71,22 +75,13 @@ namespace Mytime.Distribution.Controllers
             .Select(e => new AdminRefundListResponse
             {
                 Id = e.Id,
-                CompleteTime = e.CompleteTime,
-                GoodsId = e.GoodsId,
-                GoodsMediaUrl = e.GoodsMediaUrl,
-                GoodsName = e.GoodsName,
-                NormalizedName = e.NormalizedName,
-                GoodsPrice = e.GoodsPrice,
-                DiscountAmount = e.DiscountAmount,
-                OrderId = e.OrderId,
+                AuditTime = e.AuditTime,
+                Createat = e.Createat,
+                Status = e.Status,
                 RefundAmount = e.RefundAmount,
-                RefundStatus = e.RefundStatus,
-                RefundApplyTime = e.RefundApplyTime,
-                RefundTime = e.RefundTime,
-                OrderNo = e.Order.OrderNo,
-                CustomerId = e.Order.CustomerId,
-                CustomerName = e.Order.Customer.NickName,
-                AvatarUrl = e.Order.Customer.AvatarUrl,
+                CustomerId = e.CustomerId,
+                CustomerName = e.Customer.NickName,
+                AvatarUrl = e.Customer.AvatarUrl,
             })
             .ToListAsync();
 
@@ -101,35 +96,13 @@ namespace Mytime.Distribution.Controllers
         [HttpGet("{id}")]
         public async Task<Result> Get(int id)
         {
-            var refundItem = await _orderItemRepository.Query()
-            .Select(e => new AdminRefundGetResponse
-            {
-                Id = e.Id,
-                CompleteTime = e.CompleteTime,
-                GoodsId = e.GoodsId,
-                GoodsMediaUrl = e.GoodsMediaUrl,
-                GoodsName = e.GoodsName,
-                NormalizedName = e.NormalizedName,
-                GoodsPrice = e.GoodsPrice,
-                DiscountAmount = e.DiscountAmount,
-                OrderId = e.OrderId,
-                RefundAmount = e.RefundAmount,
-                RefundStatus = e.RefundStatus,
-                RefundReason = e.RefundReason,
-                RefundApplyTime = e.RefundApplyTime,
-                RefundTime = e.RefundTime,
-                OrderNo = e.Order.OrderNo,
-                CustomerId = e.Order.CustomerId,
-                CustomerName = e.Order.Customer.NickName,
-                AvatarUrl = e.Order.Customer.AvatarUrl,
-                CourierCompany = e.CourierCompany,
-                CourierCompanyCode = e.CourierCompanyCode,
-                TrackingNumber = e.TrackingNumber
-            })
+            var returnApply = await _returnApplyRepository.Query()
+            .Include(e => e.Customer)
+            .Include(e => e.OrderItem)
             .FirstOrDefaultAsync(e => e.Id == id);
-            if (refundItem == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (returnApply == null) return Result.Fail(ResultCodes.IdInvalid);
 
-            return Result.Ok(refundItem);
+            return Result.Ok(_mapper.Map<AdminRefundGetResponse>(returnApply));
         }
 
         /// <summary>
@@ -139,9 +112,11 @@ namespace Mytime.Distribution.Controllers
         [HttpPost("apply")]
         public async Task<Result> ConfirmApply([FromBody] AdminRefundConfirmApplyRequest request)
         {
-            var refundItem = await _orderItemRepository.FirstOrDefaultAsync(request.Id);
-            if (refundItem == null) return Result.Fail(ResultCodes.IdInvalid);
-            if (refundItem.RefundStatus != RefundStatus.RefundApply) return Result.Fail(ResultCodes.RequestParamError, "当前申请不允许修改状态");
+            var returnApply = await _returnApplyRepository.Query()
+            .Include(e => e.OrderItem)
+            .FirstOrDefaultAsync(e => e.Id == request.Id);
+            if (returnApply == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (returnApply.Status != ReturnAuditStatus.NotAudit) return Result.Fail(ResultCodes.RequestParamError, "当前申请不允许修改状态");
 
             var address = await _addressRepository.Query()
             .Include(e => e.Province)
@@ -152,7 +127,7 @@ namespace Mytime.Distribution.Controllers
 
             var returnAddress = new ReturnAddress
             {
-                OrderItemId = refundItem.Id,
+                ReturnApplyId = returnApply.Id,
                 AreaName = address.Area.Name,
                 CityName = address.City.Name,
                 Createat = DateTime.Now,
@@ -164,17 +139,42 @@ namespace Mytime.Distribution.Controllers
                 UserName = address.UserName,
             };
 
-            refundItem.RefundStatus = RefundStatus.ConfirmApply;
+            returnApply.Status = ReturnAuditStatus.Agree;
+            returnApply.AuditMessage = request.Remarks;
+            returnApply.AuditTime = DateTime.Now;
+            returnApply.OrderItem.Status = OrderItemStatus.ConfirmApply;
 
-            _orderItemRepository.Update(refundItem, false);
-            using (var transaction = _orderItemRepository.BeginTransaction())
+            _returnApplyRepository.Update(returnApply, false);
+            using (var transaction = _returnApplyRepository.BeginTransaction())
             {
-                await _orderItemRepository.SaveAsync();
+                await _returnApplyRepository.SaveAsync();
 
                 await _refundAddressRepository.InsertAsync(returnAddress);
 
                 transaction.Commit();
             }
+
+            return Result.Ok();
+        }
+
+        /// <summary>
+        /// 拒绝
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("refuse")]
+        public async Task<Result> RefuseApply([FromBody] AdminRefundRefuseApplyRequest request)
+        {
+            var returnApply = await _returnApplyRepository.Query()
+            .Include(e => e.OrderItem)
+            .FirstOrDefaultAsync(e => e.Id == request.Id);
+            if (returnApply == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (returnApply.Status != ReturnAuditStatus.NotAudit) return Result.Fail(ResultCodes.RequestParamError, "当前申请不允许拒绝");
+
+            returnApply.Status = ReturnAuditStatus.Failed;
+            returnApply.AuditMessage = request.AuditMessage;
+            returnApply.OrderItem.Status = OrderItemStatus.ApplyFaild;
+
+            await _returnApplyRepository.UpdateAsync(returnApply);
 
             return Result.Ok();
         }
@@ -186,14 +186,15 @@ namespace Mytime.Distribution.Controllers
         [HttpPost("{id}")]
         public async Task<Result> ConfirmRefund(int id)
         {
-            var refundItem = await _orderItemRepository.Query()
+            var returnApply = await _returnApplyRepository.Query()
             // .Include(e => e.ShipmentOrderItems).ThenInclude(e => e.Shipment)
-            .Include(e => e.Order)
-            .Include(e => e.CommissionHistory)
+            .Include(e => e.OrderItem).ThenInclude(e => e.Order)
+            .Include(e => e.OrderItem).ThenInclude(e => e.CommissionHistory)
             .FirstOrDefaultAsync(e => e.Id == id);
-            if (refundItem == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (returnApply == null) return Result.Fail(ResultCodes.IdInvalid);
 
-            var commission = refundItem.CommissionHistory;
+            var returnGoods = returnApply.OrderItem;
+            var commission = returnGoods.CommissionHistory;
             if (commission != null)
             {
                 commission.Status = CommissionStatus.Invalidation;
@@ -202,37 +203,31 @@ namespace Mytime.Distribution.Controllers
                 await _customerManager.UpdateAssets(commission.CustomerId, -commission.Commission);
             }
 
-            var order = refundItem.Order;
-            order.PaymentFee -= refundItem.DiscountAmount;
+            var order = returnGoods.Order;
+            order.PaymentFee -= returnGoods.DiscountAmount;
             if (order.PaymentFee == 0)
             {
                 order.OrderStatus = OrderStatus.Closed;
                 order.CancelTime = DateTime.Now;
             }
 
-            // var shipments = refundItem.ShipmentOrderItems.Select(e => e.Shipment);
-            // foreach (var item in shipments)
-            // {
-            //     if (item.IsValid) continue;
-            //     item.ShippingStatus = ShippingStatus.Complete;
-            //     item.CompleteTime = DateTime.Now;
-            // }
+            returnGoods.Status = OrderItemStatus.CompleteRefund;
+            returnGoods.CompleteTime = DateTime.Now;
 
-            refundItem.RefundStatus = RefundStatus.CompleteRefund;
-            refundItem.RefundTime = DateTime.Now;
-            refundItem.CompleteTime = DateTime.Now;
+            returnApply.Status = ReturnAuditStatus.Completed;
+            returnApply.RefundTime = DateTime.Now;
 
-            _orderItemRepository.Update(refundItem, false);
+            _returnApplyRepository.Update(returnApply, false);
 
-            using (var transaction = _orderItemRepository.BeginTransaction())
+            using (var transaction = _returnApplyRepository.BeginTransaction())
             {
-                await _orderItemRepository.SaveAsync();
+                await _returnApplyRepository.SaveAsync();
 
-                if (refundItem.DiscountAmount > 0)
+                if (returnGoods.DiscountAmount > 0)
                 {
-                    await _customerManager.UpdateAssets(order.CustomerId, 0, refundItem.DiscountAmount, "退款");
+                    await _customerManager.UpdateAssets(order.CustomerId, 0, returnGoods.DiscountAmount, "退款");
                 }
-                
+
                 transaction.Commit();
             }
 

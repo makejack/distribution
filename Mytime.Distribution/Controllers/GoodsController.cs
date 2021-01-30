@@ -77,8 +77,8 @@ namespace Mytime.Distribution.Controllers
             var discountRate = 100f;
             Customer user = null;
             var authenticationScheme = JwtBearerDefaults.AuthenticationScheme;
-            var auth = HttpContext.AuthenticateAsync(authenticationScheme);
-            if (auth.IsCompletedSuccessfully)
+            var auth = await HttpContext.AuthenticateAsync(authenticationScheme);
+            if (auth.Succeeded)
             {
                 user = await _customerManager.GetUserAsync();
             }
@@ -135,14 +135,17 @@ namespace Mytime.Distribution.Controllers
             var goodsRes = _mapper.Map<GoodsGetResponse>(goods);
 
             var authenticationScheme = JwtBearerDefaults.AuthenticationScheme;
-            var auth = HttpContext.AuthenticateAsync(authenticationScheme);
-            if (auth.IsCompletedSuccessfully)
+            var auth = await HttpContext.AuthenticateAsync(authenticationScheme);
+            if (auth.Succeeded)
             {
                 var user = await _customerManager.GetUserAsync();
-                if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
-                    discountRate = goods.CityDiscount;
-                else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
-                    discountRate = goods.BranchDiscount;
+                if (user != null)
+                {
+                    if (user.Role == PartnerRole.CityPartner && goods.CityDiscount > 0)
+                        discountRate = goods.CityDiscount;
+                    else if (user.Role == PartnerRole.BranchPartner && goods.BranchDiscount > 0)
+                        discountRate = goods.BranchDiscount;
+                }
             }
 
             goodsRes.DiscountPrice = (int)(goodsRes.Price * (discountRate / 100f));

@@ -80,7 +80,7 @@ namespace Mytime.Distribution.Controllers
 
             var userId = HttpContext.GetUserId();
 
-            var queryable = _orderItemRepository.Query().Where(e => e.Order.CustomerId == userId && e.Order.OrderStatus == OrderStatus.PaymentReceived && e.ShippingStatus == ShippingStatus.Default);
+            var queryable = _orderItemRepository.Query().Where(e => e.Order.CustomerId == userId && e.Order.OrderStatus == OrderStatus.PaymentReceived && e.Status == OrderItemStatus.Default);
             var totalRows = await queryable.CountAsync();
             var orderItems = await queryable
             .Include(e => e.Goods).ThenInclude(e => e.Childrens).ThenInclude(e => e.OptionCombinations).ThenInclude(e => e.Option)
@@ -252,12 +252,12 @@ namespace Mytime.Distribution.Controllers
                 };
             }
 
-            var orderItemIds = request.Items.Select(e => e.Id).ToList();
+            var orderItemIds = request.Items.Select(e => e.Id).Distinct().ToList();
             var orderItems = await _orderItemRepository.Query().Where(e => orderItemIds.Contains(e.Id)).ToListAsync();
             // var goodsIds = request.Items.Select(e => e.GoodsId);
             // var goodses = await _goodsRepository.Query().Where(e => goodsIds.Contains(e.Id)).ToListAsync();
             var shipmentOrderItems = new List<ShipmentOrderItem>();
-            foreach (var item in request.Items)
+            foreach (var item in request.Items.Distinct())
             {
                 var first = orderItems.FirstOrDefault(e => e.Id == item.Id);
                 if (first == null) return Result.Fail(ResultCodes.RequestParamError, $"订单不存在 {item.Id}");
@@ -373,8 +373,7 @@ namespace Mytime.Distribution.Controllers
                 //减库存
                 goods.StockQuantity -= item.Quantity;
 
-                item.ShippingStatus = ShippingStatus.PendingShipment;
-                item.ShippingTime = DateTime.Now;
+                item.Status = OrderItemStatus.PendingShipment;
             }
 
             shipment.IsValid = true;
@@ -397,7 +396,7 @@ namespace Mytime.Distribution.Controllers
                 Name = shippingAddress.UserName,
                 Tel = shippingAddress.TelNumber,
             };
-            await _adminUserManager.AfterSaleNotify(notify);
+            await _adminUserManager.WarehouseNotify(notify);
 
             return Result.Ok();
         }

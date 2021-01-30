@@ -1,3 +1,4 @@
+using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,6 +37,21 @@ namespace Mytime.Distribution.Controllers
         {
             _customerRepository = customerRepository;
             _mapper = mapper;
+        }
+
+        /// <summary>
+        /// 获取所有用户
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("all")]
+        public async Task<Result> GetAll([FromQuery] string nickName)
+        {
+            var customers = new List<Customer>();
+            if (!string.IsNullOrEmpty(nickName))
+            {
+                customers = await _customerRepository.Query().Where(e => e.NickName.Contains(nickName)).ToListAsync();
+            }
+            return Result.Ok(_mapper.Map<List<CustomerResponse>>(customers));
         }
 
         /// <summary>

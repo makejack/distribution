@@ -252,7 +252,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     CancelTime = table.Column<DateTime>(nullable: true),
                     Createat = table.Column<DateTime>(nullable: false),
                     ExtendParams = table.Column<string>(nullable: true),
-                    IsFistOrder = table.Column<bool>(nullable: false)
+                    IsFirstOrder = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

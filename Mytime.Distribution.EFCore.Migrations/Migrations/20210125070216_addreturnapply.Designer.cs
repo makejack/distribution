@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mytime.Distribution.EFCore;
 
 namespace Mytime.Distribution.EFCore.Migrations.Migrations
 {
     [DbContext(typeof(AppDatabase))]
-    partial class AppDatabaseModelSnapshot : ModelSnapshot
+    [Migration("20210125070216_addreturnapply")]
+    partial class addreturnapply
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -673,26 +675,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.HasIndex("OptionId");
 
                     b.ToTable("GoodsOptionValue");
-                });
-
-            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.LiteAppSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("BranchMembershipRights")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("CityMembershipRights")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<DateTime>("Createat")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LiteAppSetting");
                 });
 
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.Media", b =>

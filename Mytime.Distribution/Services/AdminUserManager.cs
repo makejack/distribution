@@ -31,12 +31,12 @@ namespace Mytime.Distribution.Services
         }
 
         /// <summary>
-        /// 售后通知
+        /// 仓库通知
         /// </summary>
         /// <returns></returns>
-        public async Task AfterSaleNotify(INotify notify)
+        public async Task WarehouseNotify(INotify notify)
         {
-            await SmsNotify(EmployeeRole.AfterSale, notify);
+            await SmsNotify(notify, EmployeeRole.Warehouse, EmployeeRole.Accounting, EmployeeRole.Admin);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Mytime.Distribution.Services
         public async Task DevelopmentNotify()
         {
             var exceptionNotify = new ExceptionNotify();
-            await SmsNotify(EmployeeRole.Development, exceptionNotify);
+            await SmsNotify(exceptionNotify, EmployeeRole.Development);
         }
 
         /// <summary>
@@ -55,13 +55,13 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         public async Task AccountingNotify(INotify notify)
         {
-            await SmsNotify(EmployeeRole.Accounting, notify);
+            await SmsNotify(notify, EmployeeRole.Accounting, EmployeeRole.Admin);
         }
 
-        private async Task SmsNotify(EmployeeRole role, INotify notify)
+        private async Task SmsNotify(INotify notify, params EmployeeRole[] roles)
         {
             var employeeTels = await _adminUserRepository.Query()
-           .Where(e => e.Role == role)
+           .Where(e => roles.Contains(e.Role))
            .Select(e => e.Tel)
            .ToListAsync();
             if (employeeTels.Count > 0)

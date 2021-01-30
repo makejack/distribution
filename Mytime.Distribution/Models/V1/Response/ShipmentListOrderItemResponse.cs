@@ -52,7 +52,7 @@ namespace Mytime.Distribution.Models.V1.Response
         /// 退款状态
         /// </summary>
         /// <value></value>
-        public RefundStatus RefundStatus { get; set; }
+        public OrderItemStatus RefundStatus { get; set; }
         /// <summary>
         /// 备注
         /// </summary>

@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Mytime.Distribution.Domain.Entities;
 using Mytime.Distribution.Domain.IRepositories;
 using Mytime.Distribution.Domain.Shared;
+using Mytime.Distribution.Extensions;
 using Mytime.Distribution.Models;
 using Mytime.Distribution.Models.V1.Request;
 using Mytime.Distribution.Models.V1.Response;
 using Mytime.Distribution.Services;
+using Mytime.Distribution.Utils.Helpers;
 
 namespace Mytime.Distribution.Controllers
 {
@@ -28,6 +30,8 @@ namespace Mytime.Distribution.Controllers
     {
         private readonly IRepositoryByInt<Orders> _orderRepository;
         private readonly IRepositoryByInt<Customer> _customerRepository;
+        private readonly IRepositoryByInt<PartnerApply> _partnerApplyRepository;
+        private readonly IRepositoryByInt<Goods> _goodsRepository;
         private readonly ICustomerManager _customerManager;
         private readonly IMapper _mapper;
 
@@ -36,15 +40,21 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <param name="orderRepository"></param>
         /// <param name="customerRepository"></param>
+        /// <param name="partnerApplyRepository"></param>
+        /// <param name="goodsRepository"></param>
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public AdminOrderController(IRepositoryByInt<Orders> orderRepository,
                                     IRepositoryByInt<Customer> customerRepository,
+                                    IRepositoryByInt<PartnerApply> partnerApplyRepository,
+                                    IRepositoryByInt<Goods> goodsRepository,
                                     ICustomerManager customerManager,
                                     IMapper mapper)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
+            _partnerApplyRepository = partnerApplyRepository;
+            _goodsRepository = goodsRepository;
             _customerManager = customerManager;
             _mapper = mapper;
         }
@@ -113,6 +123,206 @@ namespace Mytime.Distribution.Controllers
         }
 
         /// <summary>
+        /// 添加订单
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<Result> Create(AdminOrderCreateRequest request)
+        {
+            var customer = await _customerRepository.Query()
+            .Include(e => e.Parent)
+            .FirstOrDefaultAsync(e => e.Id == request.CustomerId);
+            if (customer == null) return Result.Fail(ResultCodes.IdInvalid);
+            if (customer.Role == PartnerRole.Default && request.PartnerRole == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, "请选择合伙人角色");
+            if (customer.Role != PartnerRole.Default && request.Goods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "请选择商品");
+
+            var now = DateTime.Now;
+            var isFirstOrder = false;
+            var totalFee = 0;
+            var actuallyAmount = 0;
+            var extendParams = string.Empty;
+            var totalCommission = 0;
+            var commissionRatio = 0f;
+            var orderItems = new List<OrderItem>();
+            var parentUser = customer.Parent;
+
+            if (request.PartnerRole != PartnerRole.Default)
+            {
+                if (customer.Role != PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, $"用户：{customer.NickName} 为{customer.Role.GetDescription()} 不能重复设置角色");
+                var partner = await _partnerApplyRepository.Query()
+                .Include(e => e.PartnerApplyGoods).ThenInclude(e => e.Goods).ThenInclude(e => e.ThumbnailImage)
+                .Where(e => e.PartnerRole == request.PartnerRole)
+                .FirstOrDefaultAsync();
+                if (partner == null) return Result.Fail(ResultCodes.RequestParamError, $"角色{request.PartnerRole.GetDescription()}未设置商品");
+                if (partner.PartnerApplyGoods.Count == 0) return Result.Fail(ResultCodes.RequestParamError, "没有商品");
+
+                if (parentUser != null)
+                {
+                    if (parentUser.Role == partner.PartnerRole)
+                    {
+                        if (partner.ReferralCommissionRatio > 0)
+                        {
+                            commissionRatio = partner.ReferralCommissionRatio / 100f;
+                        }
+                    }
+                    else
+                    {
+                        var ratio = await _partnerApplyRepository.Query()
+                        .Where(e => e.PartnerRole == parentUser.Role)
+                        .Select(e => e.RepurchaseCommissionRatio)
+                        .FirstOrDefaultAsync();
+                        if (ratio > 0)
+                        {
+                            commissionRatio = ratio / 100f;
+                        }
+                    }
+                }
+
+                isFirstOrder = true;
+                customer.Role = request.PartnerRole;
+                extendParams = Enum.GetName(typeof(PartnerRole), request.PartnerRole);
+                totalFee = partner.OriginalPrice == 0 ? partner.TotalAmount : partner.OriginalPrice;
+                actuallyAmount = partner.TotalAmount;
+                var goodsQuantity = partner.PartnerApplyGoods.Sum(e => e.Quantity);
+                var averagePrice = partner.TotalAmount / goodsQuantity;
+                var quantity = 0;
+                foreach (var item in partner.PartnerApplyGoods)
+                {
+                    quantity += item.Quantity;
+                    if (quantity == goodsQuantity)
+                    {
+                        averagePrice = partner.TotalAmount - ((quantity - 1) * averagePrice);
+                    }
+                    var commission = (int)(averagePrice * commissionRatio);
+                    totalCommission = item.Quantity * commission;
+                    for (int i = 0; i < item.Quantity; i++)
+                    {
+                        var orderItem = new OrderItem
+                        {
+                            GoodsId = item.GoodsId,
+                            GoodsName = item.Goods.Name,
+                            GoodsPrice = item.Goods.Price,
+                            DiscountAmount = item.Goods.Price,
+                            GoodsMediaUrl = item.Goods.ThumbnailImage?.Url,
+                            Quantity = 1,
+                            Remarks = string.Empty,
+                            Status = OrderItemStatus.Default,
+                            Createat = now,
+                            IsFirstBatchGoods = true
+                        };
+
+                        orderItem.SetCommissionHistory(customer.ParentId, commission, (int)(commissionRatio * 100), CommissionStatus.Complete);
+
+                        orderItems.Add(orderItem);
+                    }
+                }
+            }
+            else if (request.Goods.Count > 0)
+            {
+                if (customer.Role == PartnerRole.Default) return Result.Fail(ResultCodes.RequestParamError, $"用户：{customer.NickName} 为未设置合伙人角色");
+                if (parentUser != null)
+                {
+                    var ratio = await _partnerApplyRepository.Query()
+                    .Where(e => e.PartnerRole == parentUser.Role)
+                    .Select(e => e.RepurchaseCommissionRatio)
+                    .FirstOrDefaultAsync();
+                    if (ratio > 0)
+                    {
+                        commissionRatio = ratio / 100f;
+                    }
+                }
+                var goodsIds = request.Goods.Select(e => e.Id).Distinct();
+                var goodses = await _goodsRepository.Query()
+                .Include(e => e.ThumbnailImage)
+                .Where(e => goodsIds.Contains(e.Id))
+                .ToListAsync();
+                foreach (var item in goodses)
+                {
+                    var first = request.Goods.FirstOrDefault(e => e.Id == item.Id);
+                    if (first == null) return Result.Fail(ResultCodes.RequestParamError, $"产品{item.Name}不存在");
+                    if (!item.IsPublished) return Result.Fail(ResultCodes.RequestParamError, $"产品{item.Name}未发布");
+
+                    var discountRate = 100f;
+                    if (customer.Role == PartnerRole.CityPartner && item.CityDiscount > 0)
+                        discountRate = item.CityDiscount;
+                    else if (customer.Role == PartnerRole.BranchPartner && item.BranchDiscount > 0)
+                        discountRate = item.BranchDiscount;
+
+                    var amount = (int)(item.Price * (discountRate / 100f));
+                    var commission = (int)(amount * commissionRatio);
+                    totalCommission += first.Quantity * commission;
+
+                    for (int i = 0; i < first.Quantity; i++)
+                    {
+                        var orderItem = new OrderItem
+                        {
+                            GoodsId = item.Id,
+                            GoodsName = item.Name,
+                            GoodsPrice = item.Price,
+                            DiscountAmount = amount, //折扣
+                            GoodsMediaUrl = item.ThumbnailImage?.Url,
+                            Quantity = 1,
+                            Remarks = first.Remarks,
+                            Status = OrderItemStatus.Default,
+                            Createat = now,
+                        };
+
+                        orderItem.SetCommissionHistory(customer.ParentId, commission, (int)(commissionRatio * 100), CommissionStatus.PendingSettlement);
+
+                        orderItems.Add(orderItem);
+                    }
+                }
+                totalFee = orderItems.Sum(e => e.Quantity * e.GoodsPrice);
+                actuallyAmount = orderItems.Sum(e => e.Quantity * e.DiscountAmount);
+            }
+
+            var order = new Orders(GenerateHelper.GenOrderNo())
+            {
+                CustomerId = customer.Id,
+                OrderStatus = OrderStatus.PaymentReceived,
+                PaymentType = request.PaymentType,
+                PaymentMethod = request.PaymentMethod,
+                PaymentFee = actuallyAmount,
+                PaymentTime = now,
+                Remarks = request.Remarks,
+                Createat = now,
+                TotalFee = totalFee,
+                ActuallyAmount = actuallyAmount,
+                ExtendParams = extendParams,
+                IsFirstOrder = isFirstOrder,
+                OrderItems = orderItems
+            };
+
+            _orderRepository.Insert(order, false);
+
+            using (var transaction = _orderRepository.BeginTransaction())
+            {
+                await _orderRepository.SaveAsync();
+
+                if (parentUser != null && totalCommission > 0)
+                {
+                    if (isFirstOrder)
+                    {
+                        await _customerManager.UpdateAssets(parentUser.Id, 0, totalCommission, "下级首单返佣金");
+                    }
+                    else
+                    {
+                        await _customerManager.UpdateAssets(parentUser.Id, totalCommission);
+                    }
+                }
+
+                if (isFirstOrder)
+                {
+                    await _customerRepository.UpdateAsync(customer);
+                }
+
+                transaction.Commit();
+            }
+
+            return Result.Ok();
+        }
+
+        /// <summary>
         /// 编辑订单信息
         /// /// </summary>
         /// <returns></returns>
@@ -133,7 +343,7 @@ namespace Mytime.Distribution.Controllers
             {
                 foreach (var item in commissions)
                 {
-                    if (order.IsFistOrder)
+                    if (order.IsFirstOrder)
                     {
                         totalAmount += item.Commission;
                         item.Status = CommissionStatus.Complete;

@@ -230,8 +230,7 @@ namespace Mytime.Distribution.Controllers
             var queryable = _withdrawalHistoryRepository.Query().Where(e => e.CustomerId == userId);
 
             var totalRows = await queryable.CountAsync();
-            var historys = await _withdrawalHistoryRepository.Query()
-            .OrderByDescending(e => e.Id)
+            var historys = await queryable.OrderByDescending(e => e.Id)
             .Skip((request.Page - 1) * request.Limit).Take(request.Limit)
             .ToListAsync();
 
