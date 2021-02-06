@@ -188,9 +188,9 @@ namespace Mytime.Distribution.Controllers
             if (request.IsUseWallet)
             {
                 assets = await _assetsRepository.Query().FirstOrDefaultAsync(e => e.CustomerId == user.Id);
-                if (assets.AvailableAmount > 0)
+                if (assets.RepurchaseAmount > 0)
                 {
-                    walletAmount = assets.AvailableAmount >= actuallyAmount ? actuallyAmount : assets.AvailableAmount;
+                    walletAmount = assets.RepurchaseAmount >= actuallyAmount ? actuallyAmount : assets.RepurchaseAmount;
                     needPay = (actuallyAmount - walletAmount) > 0;
                     foreach (var item in orderItems)
                     {
@@ -226,12 +226,12 @@ namespace Mytime.Distribution.Controllers
 
                 if (user.ParentId.HasValue && !needPay && totalCommission > 0)
                 {
-                    await _customerManager.UpdateAssets(user.ParentId.Value, totalCommission);
+                    await _customerManager.UpdateCommission(user.ParentId.Value, totalCommission);
                 }
 
                 if (!needPay && walletAmount > 0)
                 {
-                    await _customerManager.UpdateAssets(assets, -walletAmount, "商品抵扣");
+                    await _customerManager.UpdateAssets(assets, 0, -walletAmount, "商品抵扣");
                 }
 
                 transaction.Commit();

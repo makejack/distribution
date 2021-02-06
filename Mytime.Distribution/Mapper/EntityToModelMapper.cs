@@ -48,6 +48,7 @@ namespace Mytime.Distribution.Mapper
             .ForMember(s => s.CityName, o => o.MapFrom(s => s.City.Name))
             .ForMember(s => s.AreaName, o => o.MapFrom(s => s.Area.Name));
             CreateMap<Assets, AssetsResponse>();
+            CreateMap<AssetsHistory, CustomerAssetsHistoryResponse>();
             CreateMap<WithdrawalHistory, WithdrawalHistoryResponse>();
             CreateMap<WithdrawalHistory, AdminWithdrawalHistoryResponse>();
             CreateMap<CommissionHistory, CommissionHistoryResponse>();

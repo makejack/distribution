@@ -108,7 +108,7 @@ namespace Mytime.Distribution.Services
 
                 if (order.WalletAmount > 0)
                 {
-                    await _customerManager.UpdateAssets(order.CustomerId, 0, -order.WalletAmount, "商品抵扣金额");
+                    await _customerManager.UpdateAssets(order.CustomerId, 0, 0, -order.WalletAmount, "商品抵扣金额");
                 }
 
                 transaction.Commit();

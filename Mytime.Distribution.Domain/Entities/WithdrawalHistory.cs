@@ -24,13 +24,28 @@ namespace Mytime.Distribution.Domain.Entities
         [MaxLength(32)]
         public string PartnerTradeNo { get; set; }
         public int Total { get; set; }
+        /// <summary>
+        /// 可提现金额
+        /// </summary>
+        /// <value></value>
         public int Amount { get; set; }
+        /// <summary>
+        /// 保留金额
+        /// </summary>
+        /// <value></value>
+        public int ReservedAmount { get; set; }
         /// <summary>
         /// 手续费
         /// </summary>
         /// <value></value>
         public int HandlingFee { get; set; }
         public WithdrawalStatus Status { get; set; }
+        /// <summary>
+        /// 描述
+        /// </summary>
+        /// <value></value>
+        [MaxLength(512)]
+        public string Description { get; set; }
         [MaxLength(512)]
         public string Message { get; set; }
         public DateTime Createat { get; set; }

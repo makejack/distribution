@@ -9,8 +9,8 @@ using Mytime.Distribution.EFCore;
 namespace Mytime.Distribution.EFCore.Migrations.Migrations
 {
     [DbContext(typeof(AppDatabase))]
-    [Migration("20210118074607_addcommissionratio")]
-    partial class addcommissionratio
+    [Migration("20210114024342_refund")]
+    partial class refund
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -310,8 +310,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.HasIndex("OpenId")
                         .IsUnique();
-
-                    b.HasIndex("ParentId");
 
                     b.ToTable("Customer");
                 });
@@ -708,14 +706,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime?>("CompleteTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("CourierCompany")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<string>("CourierCompanyCode")
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
-                        .HasMaxLength(128);
-
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
 
@@ -769,6 +759,18 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime?>("RefundTime")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("CourierCompany")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<string>("CourierCompanyCode")
+                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
+                        .HasMaxLength(128);
+
+                    b.Property<string>("TrackingNumber")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
+
                     b.Property<string>("Remarks")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
@@ -778,10 +780,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.Property<DateTime?>("ShippingTime")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("TrackingNumber")
-                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
-                        .HasMaxLength(32);
 
                     b.Property<DateTime?>("WarrantyDeadline")
                         .HasColumnType("datetime(6)");
@@ -885,12 +883,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.Property<byte>("PartnerRole")
                         .HasColumnType("tinyint unsigned");
-
-                    b.Property<int>("ReferralCommissionRatio")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RepurchaseCommissionRatio")
-                        .HasColumnType("int");
 
                     b.Property<int>("OriginalPrice")
                         .HasColumnType("int");
@@ -1230,6 +1222,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
+                    b.Property<string>("Description")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+                        
                     b.Property<string>("PartnerTradeNo")
                         .IsRequired()
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
@@ -1305,14 +1301,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .WithOne("CommissionHistory")
                         .HasForeignKey("Mytime.Distribution.Domain.Entities.CommissionHistory", "OrderItemId")
                         .OnDelete(DeleteBehavior.SetNull);
-                });
-
-            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.Customer", b =>
-                {
-                    b.HasOne("Mytime.Distribution.Domain.Entities.Customer", "Parent")
-                        .WithMany("Childrens")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.CustomerAddress", b =>

@@ -91,7 +91,7 @@ namespace Mytime.Distribution.Controllers
 
             var reservedAmount = (int)(request.Amount * 0.2); //保留20%的金额
             var amount = request.Amount - reservedAmount; //提现金额
-            var handlingFee = (int)(amount * 0.001); //微信手续费0.1%
+            var handlingFee = (int)(request.Amount * 0.001); //微信手续费0.1%
             if (handlingFee < 100)
             {
                 handlingFee = 100;
@@ -122,6 +122,7 @@ namespace Mytime.Distribution.Controllers
                 BankCode = bankCard.BankCode,
                 BankNo = bankCard.BankNo,
                 Amount = amount,
+                ReservedAmount = reservedAmount - reservedAmount,
                 Status = payBankResult.IsSuccess ? WithdrawalStatus.Success : WithdrawalStatus.Failed,
                 Message = payBankResult.Message,
                 PartnerTradeNo = partnerTradeNo,
@@ -138,7 +139,7 @@ namespace Mytime.Distribution.Controllers
 
                 if (payBankResult.IsSuccess)
                 {
-                    await _customerManager.UpdateAssets(assets, -(amount + handlingFee), "提现");
+                    await _customerManager.UpdateAssets(assets, -request.Amount, reservedAmount - reservedAmount, "提现");
                 }
                 transaction.Commit();
             }
@@ -162,15 +163,15 @@ namespace Mytime.Distribution.Controllers
             }
             if (assets.AvailableAmount <= 0) return Result.Fail(ResultCodes.RequestParamError, "可提现金额不足");
             if (assets.AvailableAmount < request.Amount) return Result.Fail(ResultCodes.RequestParamError, "金额不足");
-            if (request.Amount < 100000) return Result.Fail(ResultCodes.RequestParamError, "金额不足1000，不可提现");
+            if (request.Amount < 100000 || request.Amount > 5000000) return Result.Fail(ResultCodes.RequestParamError, "提现金额最低1000，最高5万，不可提现");
             if (string.IsNullOrEmpty(user.Name)) return Result.Fail(ResultCodes.RequestParamError, "姓名不能为空");
 
             var anyApply = await _withdrawalHistoryRepository.Query().AnyAsync(e => e.CustomerId == userId && e.Status == WithdrawalStatus.Apply);
             if (anyApply) return Result.Fail(ResultCodes.RequestParamError, "提现申请已提交，不允许重复申请。");
 
+            var handlingFee = (int)(request.Amount * 0.02); //微信手续费2%
             var reservedAmount = (int)(request.Amount * 0.2); //保留20%的金额
             var amount = request.Amount - reservedAmount; //提现金额
-            var handlingFee = (int)(amount * 0.001); //微信手续费0.1%
             if (handlingFee < 100)
             {
                 handlingFee = 100;
@@ -188,6 +189,7 @@ namespace Mytime.Distribution.Controllers
                 BankCode = string.Empty,
                 BankNo = string.Empty,
                 Amount = amount,
+                ReservedAmount = reservedAmount - handlingFee,
                 Status = WithdrawalStatus.Apply,
                 Message = string.Empty,
                 PartnerTradeNo = partnerTradeNo,
@@ -202,7 +204,7 @@ namespace Mytime.Distribution.Controllers
             {
                 await _withdrawalHistoryRepository.SaveAsync();
 
-                await _customerManager.UpdateAssets(assets, -(amount + handlingFee), "提现");
+                await _customerManager.UpdateAssets(assets, -request.Amount, reservedAmount - handlingFee, "提现");
 
                 transaction.Commit();
             }

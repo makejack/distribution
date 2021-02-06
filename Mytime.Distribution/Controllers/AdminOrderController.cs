@@ -21,7 +21,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台订单管理
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/order")]
@@ -307,7 +307,7 @@ namespace Mytime.Distribution.Controllers
                     }
                     else
                     {
-                        await _customerManager.UpdateAssets(parentUser.Id, totalCommission);
+                        await _customerManager.UpdateCommission(parentUser.Id, totalCommission);
                     }
                 }
 

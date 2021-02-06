@@ -17,7 +17,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台顾客
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/customer")]

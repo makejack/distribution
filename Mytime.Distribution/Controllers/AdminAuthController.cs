@@ -62,6 +62,7 @@ namespace Mytime.Distribution.Controllers
 
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim("id", user.Id.ToString()));
+            claims.Add(new Claim(ClaimTypes.Role, user.Role.ToString()));
 
             var token = _tokenService.JwtToken(claims);
             var userRes = _mapper.Map<AdminUserResponse>(user);

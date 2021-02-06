@@ -15,7 +15,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 系统日志
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Development")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/log")]

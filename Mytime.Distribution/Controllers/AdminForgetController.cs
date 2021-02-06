@@ -16,7 +16,7 @@ using Mytime.Distribution.Utils.Helpers;
 namespace Mytime.Distribution.Controllers
 {
     /// <summary>
-    /// 记录密码
+    /// 忘记密码
     /// </summary>
     [ApiController]
     [ApiVersion("1")]

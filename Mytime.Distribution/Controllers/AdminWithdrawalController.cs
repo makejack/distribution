@@ -23,7 +23,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台提现
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/withdrawal")]
@@ -136,10 +136,10 @@ namespace Mytime.Distribution.Controllers
             if (response.ReturnCode != WeChatPayCode.Success || response.ResultCode != WeChatPayCode.Success)
             {
                 apply.Status = WithdrawalStatus.Failed;
-                apply.Message = response.ErrCodeDes;
+                apply.Message = "提现异常，请重新申请";
+                apply.Description = response.ErrCodeDes;
 
-                var amount = apply.Amount + apply.HandlingFee;
-                await _customerManager.UpdateAssets(apply.CustomerId, 0, amount, "提现失败返回金额");
+                await _customerManager.UpdateAssets(apply.CustomerId, 0, apply.Total, -apply.ReservedAmount, "提现失败返回金额");
             }
 
             await _withdrawalHistoryRepository.UpdateAsync(apply);
@@ -160,16 +160,16 @@ namespace Mytime.Distribution.Controllers
             if (apply.Status != WithdrawalStatus.Apply) return Result.Fail(ResultCodes.RequestParamError, "当前申请状态不允许确认");
 
             apply.Status = WithdrawalStatus.Failed;
+            apply.Description = request.Message;
             apply.Message = request.Message;
 
             _withdrawalHistoryRepository.Update(apply, false);
 
-            var amount = apply.Amount + apply.HandlingFee;
             using (var transaction = _withdrawalHistoryRepository.BeginTransaction())
             {
                 await _withdrawalHistoryRepository.SaveAsync();
 
-                await _customerManager.UpdateAssets(apply.CustomerId, 0, amount, "提现失败返回金额");
+                await _customerManager.UpdateAssets(apply.CustomerId, 0, apply.Total, -apply.ReservedAmount, "提现失败返回金额");
 
                 transaction.Commit();
             }

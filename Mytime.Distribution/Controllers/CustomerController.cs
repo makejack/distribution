@@ -33,6 +33,7 @@ namespace Mytime.Distribution.Controllers
         private readonly IRepositoryByInt<BankCard> _bankCardRepository;
         private readonly IRepositoryByInt<CustomerRelation> _customerRelationRepository;
         private readonly IRepositoryByInt<Assets> _assetsRepository;
+        private readonly IRepositoryByInt<AssetsHistory> _assetsHistoryRepository;
         private readonly ICustomerManager _customerManager;
         private readonly IMapper _mapper;
 
@@ -43,12 +44,14 @@ namespace Mytime.Distribution.Controllers
         /// <param name="bankCardRepository"></param>
         /// <param name="customerRelationRepository"></param>
         /// <param name="assetsRepository"></param>
+        /// <param name="assetsHistoryRepository"></param>
         /// <param name="customerManager"></param>
         /// <param name="mapper"></param>
         public CustomerController(IRepositoryByInt<Customer> customerRepository,
                                   IRepositoryByInt<BankCard> bankCardRepository,
                                   IRepositoryByInt<CustomerRelation> customerRelationRepository,
                                   IRepositoryByInt<Assets> assetsRepository,
+                                  IRepositoryByInt<AssetsHistory> assetsHistoryRepository,
                                   ICustomerManager customerManager,
                                   IMapper mapper)
         {
@@ -56,6 +59,7 @@ namespace Mytime.Distribution.Controllers
             _bankCardRepository = bankCardRepository;
             _customerRelationRepository = customerRelationRepository;
             _assetsRepository = assetsRepository;
+            _assetsHistoryRepository = assetsHistoryRepository;
             _customerManager = customerManager;
             _mapper = mapper;
         }
@@ -94,6 +98,7 @@ namespace Mytime.Distribution.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("assets")]
+        [ProducesResponseType(typeof(AssetsResponse), 200)]
         public async Task<Result> Assets()
         {
             var userId = HttpContext.GetUserId();
@@ -102,6 +107,24 @@ namespace Mytime.Distribution.Controllers
                 assets = new Assets();
 
             return Result.Ok(_mapper.Map<AssetsResponse>(assets));
+        }
+
+        /// <summary>
+        /// 资产记录
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("assets/history")]
+        public async Task<Result> AssetsHistory([FromQuery] PaginationRequest request)
+        {
+            var userId = HttpContext.GetUserId();
+            var queryable = _assetsHistoryRepository.Query().Where(e => e.CustomerId == userId);
+
+            var totalRows = await queryable.CountAsync();
+            var historys = await queryable.OrderByDescending(e => e.Id)
+            .Skip((request.Page - 1) * request.Limit).Take(request.Limit)
+            .ToListAsync();
+
+            return Result.Ok(new PaginationResponse(request.Page, totalRows, _mapper.Map<List<CustomerAssetsHistoryResponse>>(historys)));
         }
 
         /// <summary>

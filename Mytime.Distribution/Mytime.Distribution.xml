@@ -333,7 +333,7 @@
         </member>
         <member name="T:Mytime.Distribution.Controllers.AdminForgetController">
             <summary>
-            记录密码
+            忘记密码
             </summary>
         </member>
         <member name="M:Mytime.Distribution.Controllers.AdminForgetController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.AdminUser},Mytime.Distribution.Services.ISmsService,AutoMapper.IMapper)">
@@ -1024,7 +1024,7 @@
             用户
             </summary>
         </member>
-        <member name="M:Mytime.Distribution.Controllers.CustomerController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.BankCard},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.CustomerRelation},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Assets},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
+        <member name="M:Mytime.Distribution.Controllers.CustomerController.#ctor(Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Customer},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.BankCard},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.CustomerRelation},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.Assets},Mytime.Distribution.Domain.IRepositories.IRepositoryByInt{Mytime.Distribution.Domain.Entities.AssetsHistory},Mytime.Distribution.Services.ICustomerManager,AutoMapper.IMapper)">
             <summary>
             构造函数
             </summary>
@@ -1032,6 +1032,7 @@
             <param name="bankCardRepository"></param>
             <param name="customerRelationRepository"></param>
             <param name="assetsRepository"></param>
+            <param name="assetsHistoryRepository"></param>
             <param name="customerManager"></param>
             <param name="mapper"></param>
         </member>
@@ -1050,6 +1051,12 @@
         <member name="M:Mytime.Distribution.Controllers.CustomerController.Assets">
             <summary>
             资产
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Controllers.CustomerController.AssetsHistory(Mytime.Distribution.Models.PaginationRequest)">
+            <summary>
+            资产记录
             </summary>
             <returns></returns>
         </member>
@@ -5143,6 +5150,12 @@
             </summary>
             <value></value>
         </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.AssetsResponse.RepurchaseAmount">
+            <summary>
+            回购金额
+            </summary>
+            <value></value>
+        </member>
         <member name="P:Mytime.Distribution.Models.V1.Response.AssetsResponse.UpdateTime">
             <summary>
             更新时间
@@ -5319,6 +5332,36 @@
             区
             </summary>
             <value></value>
+        </member>
+        <member name="T:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse">
+            <summary>
+            用户资产历史记录
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse.TotalAmount">
+            <summary>
+            总金额（余额）
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse.Amount">
+            <summary>
+            消费
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse.Message">
+            <summary>
+            消息
+            </summary>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.CustomerAssetsHistoryResponse.Createat">
+            <summary>
+            创建时间
+            </summary>
         </member>
         <member name="T:Mytime.Distribution.Models.V1.Response.CustomerResponse">
             <summary>
@@ -6196,6 +6239,12 @@
             </summary>
             <value></value>
         </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.WithdrawalHistoryResponse.ReservedAmount">
+            <summary>
+            保留金额
+            </summary>
+            <value></value>
+        </member>
         <member name="P:Mytime.Distribution.Models.V1.Response.WithdrawalHistoryResponse.HandlingFee">
             <summary>
             手续费
@@ -6211,6 +6260,12 @@
         <member name="P:Mytime.Distribution.Models.V1.Response.WithdrawalHistoryResponse.Message">
             <summary>
             消息
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:Mytime.Distribution.Models.V1.Response.WithdrawalHistoryResponse.Description">
+            <summary>
+            描述
             </summary>
             <value></value>
         </member>
@@ -6300,9 +6355,9 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateAssets(System.Int32,System.Int32)">
+        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateCommission(System.Int32,System.Int32)">
             <summary>
-            修改资产
+            修改佣金
             </summary>
             <param name="customerId">顾客Id</param>
             <param name="commission">佣金</param>
@@ -6317,12 +6372,35 @@
             <param name="message"></param>
             <returns></returns>
         </member>
-        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.String)">
+        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateAssets(System.Int32,System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            修改资产
+            </summary>
+            <param name="customerId"></param>
+            <param name="commission"></param>
+            <param name="amount"></param>
+            <param name="repurchase"></param>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.Int32,System.String)">
             <summary>
             修改资产
             </summary>
             <param name="assets"></param>
             <param name="amount"></param>
+            <param name="repurchase"></param>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Services.CustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            修改资产
+            </summary>
+            <param name="assets"></param>
+            <param name="commission"></param>
+            <param name="amount"></param>
+            <param name="repurchase"></param>
             <param name="message"></param>
             <returns></returns>
         </member>
@@ -6373,19 +6451,31 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateAssets(System.Int32,System.Int32)">
+        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateCommission(System.Int32,System.Int32)">
             <summary>
-            修改资产
+            修改佣金
             </summary>
             <param name="customerId">顾客Id</param>
             <param name="commission">佣金</param>
         </member>
-        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.String)">
+        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.Int32,System.String)">
             <summary>
             修改资产
             </summary>
             <param name="assets"></param>
             <param name="amount"></param>
+            <param name="repurchase"></param>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateAssets(Mytime.Distribution.Domain.Entities.Assets,System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            修改资产
+            </summary>
+            <param name="assets"></param>
+            <param name="commission"></param>
+            <param name="amount"></param>
+            <param name="repurchase"></param>
             <param name="message"></param>
             <returns></returns>
         </member>
@@ -6396,6 +6486,17 @@
             <param name="customerId"></param>
             <param name="commission"></param>
             <param name="amount"></param>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mytime.Distribution.Services.ICustomerManager.UpdateAssets(System.Int32,System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            修改资产
+            </summary>
+            <param name="customerId"></param>
+            <param name="commission"></param>
+            <param name="amount"></param>
+            <param name="repurchase"></param>
             <param name="message"></param>
             <returns></returns>
         </member>

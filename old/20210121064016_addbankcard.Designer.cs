@@ -9,8 +9,8 @@ using Mytime.Distribution.EFCore;
 namespace Mytime.Distribution.EFCore.Migrations.Migrations
 {
     [DbContext(typeof(AppDatabase))]
-    [Migration("20210125070216_addreturnapply")]
-    partial class addreturnapply
+    [Migration("20210121064016_addbankcard")]
+    partial class addbankcard
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -767,6 +767,14 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<DateTime?>("CompleteTime")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("CourierCompany")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<string>("CourierCompanyCode")
+                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
+                        .HasMaxLength(128);
+
                     b.Property<DateTime>("Createat")
                         .HasColumnType("datetime(6)");
 
@@ -804,12 +812,35 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("RefundAmount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RefundApplyTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RefundReason")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<byte>("RefundStatus")
+                        .HasColumnType("tinyint unsigned");
+
+                    b.Property<DateTime?>("RefundTime")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Remarks")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
-                    b.Property<byte>("Status")
+                    b.Property<byte>("ShippingStatus")
                         .HasColumnType("tinyint unsigned");
+
+                    b.Property<DateTime?>("ShippingTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
 
                     b.Property<DateTime?>("WarrantyDeadline")
                         .HasColumnType("datetime(6)");
@@ -1036,6 +1067,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
+                    b.Property<int>("OrderItemId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
@@ -1050,9 +1084,6 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
-                    b.Property<int>("ReturnApplyId")
-                        .HasColumnType("int");
-
                     b.Property<string>("TelNumber")
                         .IsRequired()
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
@@ -1065,85 +1096,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReturnApplyId")
-                        .IsUnique();
-
-                    b.ToTable("ReturnAddress");
-                });
-
-            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.ReturnApply", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("AuditMessage")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<DateTime?>("AuditTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CourierCompany")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<string>("CourierCompanyCode")
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
-                        .HasMaxLength(128);
-
-                    b.Property<DateTime>("Createat")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<byte>("LogisticsStatus")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<int>("OrderItemId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PaymentAmount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
-                        .HasMaxLength(512);
-
-                    b.Property<int>("RefundAmount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("RefundTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<byte>("ReturnType")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<int>("ShipmentId")
-                        .HasColumnType("int");
-
-                    b.Property<byte>("Status")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<string>("TrackingNumber")
-                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
-                        .HasMaxLength(32);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
                     b.HasIndex("OrderItemId")
                         .IsUnique();
 
-                    b.HasIndex("ShipmentId");
-
-                    b.ToTable("ReturnApply");
+                    b.ToTable("ReturnAddress");
                 });
 
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.Shipment", b =>
@@ -1335,6 +1291,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Message")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
+                    b.Property<string>("Description")
                         .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
                         .HasMaxLength(512);
 
@@ -1605,30 +1565,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
 
             modelBuilder.Entity("Mytime.Distribution.Domain.Entities.ReturnAddress", b =>
                 {
-                    b.HasOne("Mytime.Distribution.Domain.Entities.ReturnApply", "ReturnApply")
-                        .WithOne("ReturnAddress")
-                        .HasForeignKey("Mytime.Distribution.Domain.Entities.ReturnAddress", "ReturnApplyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Mytime.Distribution.Domain.Entities.ReturnApply", b =>
-                {
-                    b.HasOne("Mytime.Distribution.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Mytime.Distribution.Domain.Entities.OrderItem", "OrderItem")
-                        .WithOne("ReturnApply")
-                        .HasForeignKey("Mytime.Distribution.Domain.Entities.ReturnApply", "OrderItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Mytime.Distribution.Domain.Entities.Shipment", "Shipment")
-                        .WithMany()
-                        .HasForeignKey("ShipmentId")
+                        .WithOne("ReturnAddress")
+                        .HasForeignKey("Mytime.Distribution.Domain.Entities.ReturnAddress", "OrderItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

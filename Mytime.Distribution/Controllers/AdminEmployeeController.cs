@@ -20,7 +20,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台员工管理
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/employee")]
@@ -81,8 +81,8 @@ namespace Mytime.Distribution.Controllers
         [HttpPost]
         public async Task<Result> Create([FromBody] AdminEmployeeCreateRequest request)
         {
-            var anyName = await _repository.Query().AnyAsync(e => e.Name == request.Name);
-            if (anyName) return Result.Fail(ResultCodes.UserExists);
+            var anyName = await _repository.Query().AnyAsync(e => e.Name == request.Name || e.Tel == request.Tel);
+            if (anyName) return Result.Fail(ResultCodes.UserExists, "用户名或手机号已存在");
 
             var user = new AdminUser
             {
@@ -109,6 +109,12 @@ namespace Mytime.Distribution.Controllers
         {
             var user = await _repository.FirstOrDefaultAsync(request.Id);
             if (user == null) return Result.Fail(ResultCodes.IdInvalid);
+
+            if (user.Tel != request.Tel)
+            {
+                var anyTel = await _repository.Query().AnyAsync(e => e.Tel == request.Tel);
+                if (anyTel) return Result.Fail(ResultCodes.RequestParamError, "手机号已存在");
+            }
 
             user.NickName = request.NickName;
             if (!user.IsAdmin)

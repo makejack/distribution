@@ -16,7 +16,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 订单票据
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/order/billing")]

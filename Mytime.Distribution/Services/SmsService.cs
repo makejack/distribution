@@ -46,6 +46,7 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         public async Task SendAsync(string tel, INotify notify)
         {
+            if(string.IsNullOrEmpty(tel)) return;
             var httpClient = _httpFactory.CreateClient();
 
             var msg = notify.Execute();

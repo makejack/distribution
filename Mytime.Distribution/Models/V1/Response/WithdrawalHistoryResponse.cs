@@ -34,6 +34,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int Amount { get; set; }
         /// <summary>
+        /// 保留金额
+        /// </summary>
+        /// <value></value>
+        public int ReservedAmount { get; set; }
+        /// <summary>
         /// 手续费
         /// </summary>
         /// <value></value>
@@ -48,6 +53,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// </summary>
         /// <value></value>
         public string Message { get; set; }
+        /// <summary>
+        /// 描述
+        /// </summary>
+        /// <value></value>
+        public string Description { get; set; }
         /// <summary>
         /// 创建时间
         /// </summary>

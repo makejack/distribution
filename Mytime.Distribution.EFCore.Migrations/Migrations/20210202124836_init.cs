@@ -19,7 +19,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     Pwd = table.Column<string>(maxLength: 512, nullable: true),
                     IsAdmin = table.Column<bool>(nullable: false),
                     Role = table.Column<byte>(nullable: false),
-                    Tel = table.Column<string>(nullable: false),
+                    Tel = table.Column<string>(maxLength: 32, nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -49,14 +49,18 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     Role = table.Column<byte>(nullable: false),
                     Status = table.Column<byte>(nullable: false),
                     ParentId = table.Column<int>(nullable: true),
-                    BankNo = table.Column<string>(maxLength: 32, nullable: true),
-                    BankCode = table.Column<string>(maxLength: 32, nullable: true),
                     IsRealName = table.Column<bool>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Customer", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Customer_Customer_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Customer",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -93,6 +97,21 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LiteAppSetting",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    CityMembershipRights = table.Column<string>(nullable: true),
+                    BranchMembershipRights = table.Column<string>(nullable: true),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LiteAppSetting", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Media",
                 columns: table => new
                 {
@@ -116,6 +135,8 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     PartnerRole = table.Column<byte>(nullable: false),
                     ApplyType = table.Column<byte>(nullable: false),
+                    ReferralCommissionRatio = table.Column<int>(nullable: false),
+                    RepurchaseCommissionRatio = table.Column<int>(nullable: false),
                     TotalQuantity = table.Column<int>(nullable: false),
                     OriginalPrice = table.Column<int>(nullable: false),
                     TotalAmount = table.Column<int>(nullable: false),
@@ -186,6 +207,7 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     TotalAssets = table.Column<int>(nullable: false),
                     AvailableAmount = table.Column<int>(nullable: false),
                     TotalCommission = table.Column<int>(nullable: false),
+                    RepurchaseAmount = table.Column<int>(nullable: false),
                     UpdateTime = table.Column<DateTime>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
@@ -194,6 +216,53 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     table.PrimaryKey("PK_Assets", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Assets_Customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customer",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AssetsHistory",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    CustomerId = table.Column<int>(nullable: false),
+                    TotalAmount = table.Column<int>(nullable: false),
+                    Amount = table.Column<int>(nullable: false),
+                    Message = table.Column<string>(maxLength: 512, nullable: true),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssetsHistory", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AssetsHistory_Customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customer",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BankCard",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    CustomerId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 32, nullable: false),
+                    PhoneNumber = table.Column<string>(maxLength: 32, nullable: true),
+                    BankCode = table.Column<string>(maxLength: 32, nullable: false),
+                    BankNo = table.Column<string>(maxLength: 32, nullable: false),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankCard", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BankCard_Customer_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customer",
                         principalColumn: "Id",
@@ -275,13 +344,13 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     TotalWeight = table.Column<int>(nullable: false),
                     Quantity = table.Column<int>(nullable: false),
                     CourierCompany = table.Column<string>(maxLength: 512, nullable: true),
-                    CourierCompanyCode = table.Column<string>(maxLength: 512, nullable: true),
+                    CourierCompanyCode = table.Column<string>(maxLength: 128, nullable: true),
                     TrackingNumber = table.Column<string>(maxLength: 32, nullable: true),
                     Remarks = table.Column<string>(maxLength: 512, nullable: true),
+                    IsValid = table.Column<bool>(nullable: false),
                     ShippingStatus = table.Column<byte>(nullable: false),
                     ShippingTime = table.Column<DateTime>(nullable: true),
                     CompleteTime = table.Column<DateTime>(nullable: true),
-                    IsValid = table.Column<bool>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -302,11 +371,16 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     CustomerId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 32, nullable: false),
+                    BankCode = table.Column<string>(maxLength: 32, nullable: true),
+                    BankNo = table.Column<string>(maxLength: 32, nullable: true),
                     PartnerTradeNo = table.Column<string>(maxLength: 32, nullable: false),
                     Total = table.Column<int>(nullable: false),
                     Amount = table.Column<int>(nullable: false),
+                    ReservedAmount = table.Column<int>(nullable: false),
                     HandlingFee = table.Column<int>(nullable: false),
                     Status = table.Column<byte>(nullable: false),
+                    Description = table.Column<string>(maxLength: 512, nullable: true),
                     Message = table.Column<string>(maxLength: 512, nullable: true),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
@@ -400,6 +474,34 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         principalTable: "Province",
                         principalColumn: "Code",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderBilling",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    OrderId = table.Column<int>(nullable: false),
+                    IsInvoiced = table.Column<bool>(nullable: false),
+                    Title = table.Column<string>(maxLength: 32, nullable: false),
+                    TaxNumber = table.Column<string>(maxLength: 32, nullable: false),
+                    CompanyAddress = table.Column<string>(maxLength: 512, nullable: true),
+                    TelePhone = table.Column<string>(maxLength: 32, nullable: true),
+                    BankName = table.Column<string>(maxLength: 512, nullable: true),
+                    BankAccount = table.Column<string>(maxLength: 32, nullable: true),
+                    Email = table.Column<string>(maxLength: 512, nullable: false),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderBilling", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderBilling_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -526,12 +628,11 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     GoodsMediaUrl = table.Column<string>(maxLength: 512, nullable: true),
                     NormalizedName = table.Column<string>(maxLength: 512, nullable: true),
                     Quantity = table.Column<int>(nullable: false),
+                    IsFirstBatchGoods = table.Column<bool>(nullable: false),
                     Remarks = table.Column<string>(maxLength: 512, nullable: true),
-                    ShippingStatus = table.Column<byte>(nullable: false),
-                    ShippingTime = table.Column<DateTime>(nullable: true),
+                    Status = table.Column<byte>(nullable: false),
                     CompleteTime = table.Column<DateTime>(nullable: true),
                     WarrantyDeadline = table.Column<DateTime>(nullable: true),
-                    IsFirstBatchGoods = table.Column<bool>(nullable: false),
                     Createat = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -639,6 +740,53 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ReturnApply",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    OrderItemId = table.Column<int>(nullable: false),
+                    ShipmentId = table.Column<int>(nullable: false),
+                    CustomerId = table.Column<int>(nullable: false),
+                    ReturnType = table.Column<byte>(nullable: false),
+                    LogisticsStatus = table.Column<byte>(nullable: false),
+                    Reason = table.Column<string>(maxLength: 512, nullable: true),
+                    Description = table.Column<string>(maxLength: 512, nullable: true),
+                    PaymentAmount = table.Column<int>(nullable: false),
+                    RefundAmount = table.Column<int>(nullable: false),
+                    RefundTime = table.Column<DateTime>(nullable: true),
+                    Status = table.Column<byte>(nullable: false),
+                    AuditTime = table.Column<DateTime>(nullable: true),
+                    AuditMessage = table.Column<string>(maxLength: 512, nullable: true),
+                    CourierCompany = table.Column<string>(maxLength: 512, nullable: true),
+                    CourierCompanyCode = table.Column<string>(maxLength: 128, nullable: true),
+                    TrackingNumber = table.Column<string>(maxLength: 32, nullable: true),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReturnApply", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ReturnApply_Customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customer",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReturnApply_OrderItem_OrderItemId",
+                        column: x => x.OrderItemId,
+                        principalTable: "OrderItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReturnApply_Shipment_ShipmentId",
+                        column: x => x.ShipmentId,
+                        principalTable: "Shipment",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ShipmentOrderItem",
                 columns: table => new
                 {
@@ -659,6 +807,45 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         column: x => x.ShipmentId,
                         principalTable: "Shipment",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AdminAddress",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    IsDefault = table.Column<bool>(nullable: false),
+                    PostalCode = table.Column<int>(nullable: false),
+                    ProvinceCode = table.Column<int>(nullable: false),
+                    CityCode = table.Column<int>(nullable: false),
+                    AreaCode = table.Column<int>(nullable: false),
+                    DetailInfo = table.Column<string>(maxLength: 512, nullable: false),
+                    TelNumber = table.Column<string>(maxLength: 32, nullable: false),
+                    UserName = table.Column<string>(maxLength: 128, nullable: false),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminAddress", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminAddress_Area_AreaCode",
+                        column: x => x.AreaCode,
+                        principalTable: "Area",
+                        principalColumn: "Code",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AdminAddress_City_CityCode",
+                        column: x => x.CityCode,
+                        principalTable: "City",
+                        principalColumn: "Code",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AdminAddress_Province_ProvinceCode",
+                        column: x => x.ProvinceCode,
+                        principalTable: "Province",
+                        principalColumn: "Code",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -708,6 +895,49 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ReturnAddress",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ReturnApplyId = table.Column<int>(nullable: false),
+                    PostalCode = table.Column<string>(maxLength: 32, nullable: false),
+                    ProvinceName = table.Column<string>(maxLength: 512, nullable: false),
+                    CityName = table.Column<string>(maxLength: 512, nullable: false),
+                    AreaName = table.Column<string>(maxLength: 512, nullable: false),
+                    DetailInfo = table.Column<string>(maxLength: 512, nullable: false),
+                    TelNumber = table.Column<string>(maxLength: 32, nullable: false),
+                    UserName = table.Column<string>(maxLength: 32, nullable: false),
+                    Remarks = table.Column<string>(maxLength: 512, nullable: true),
+                    Createat = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReturnAddress", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ReturnAddress_ReturnApply_ReturnApplyId",
+                        column: x => x.ReturnApplyId,
+                        principalTable: "ReturnApply",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminAddress_AreaCode",
+                table: "AdminAddress",
+                column: "AreaCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminAddress_CityCode",
+                table: "AdminAddress",
+                column: "CityCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminAddress_ProvinceCode",
+                table: "AdminAddress",
+                column: "ProvinceCode");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AdminUser_Name",
                 table: "AdminUser",
@@ -731,6 +961,16 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AssetsHistory_CustomerId",
+                table: "AssetsHistory",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankCard_CustomerId",
+                table: "BankCard",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_City_ProvinceCode",
                 table: "City",
                 column: "ProvinceCode");
@@ -751,6 +991,11 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 table: "Customer",
                 column: "OpenId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customer_ParentId",
+                table: "Customer",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerAddress_AreaCode",
@@ -823,6 +1068,12 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 column: "OptionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderBilling_OrderId",
+                table: "OrderBilling",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderItem_GoodsId",
                 table: "OrderItem",
                 column: "GoodsId");
@@ -854,6 +1105,28 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 column: "PartnerApplyId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ReturnAddress_ReturnApplyId",
+                table: "ReturnAddress",
+                column: "ReturnApplyId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReturnApply_CustomerId",
+                table: "ReturnApply",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReturnApply_OrderItemId",
+                table: "ReturnApply",
+                column: "OrderItemId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReturnApply_ShipmentId",
+                table: "ReturnApply",
+                column: "ShipmentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Shipment_CustomerId",
                 table: "Shipment",
                 column: "CustomerId");
@@ -878,10 +1151,19 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AdminAddress");
+
+            migrationBuilder.DropTable(
                 name: "AdminUser");
 
             migrationBuilder.DropTable(
                 name: "Assets");
+
+            migrationBuilder.DropTable(
+                name: "AssetsHistory");
+
+            migrationBuilder.DropTable(
+                name: "BankCard");
 
             migrationBuilder.DropTable(
                 name: "CommissionHistory");
@@ -908,10 +1190,19 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 name: "GoodsOptionValue");
 
             migrationBuilder.DropTable(
+                name: "LiteAppSetting");
+
+            migrationBuilder.DropTable(
+                name: "OrderBilling");
+
+            migrationBuilder.DropTable(
                 name: "PartnerApplyGoods");
 
             migrationBuilder.DropTable(
                 name: "RequestResponseLog");
+
+            migrationBuilder.DropTable(
+                name: "ReturnAddress");
 
             migrationBuilder.DropTable(
                 name: "ShipmentOrderItem");
@@ -935,22 +1226,25 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                 name: "PartnerApply");
 
             migrationBuilder.DropTable(
+                name: "ReturnApply");
+
+            migrationBuilder.DropTable(
+                name: "City");
+
+            migrationBuilder.DropTable(
                 name: "OrderItem");
 
             migrationBuilder.DropTable(
                 name: "Shipment");
 
             migrationBuilder.DropTable(
-                name: "City");
+                name: "Province");
 
             migrationBuilder.DropTable(
                 name: "Goods");
 
             migrationBuilder.DropTable(
                 name: "Orders");
-
-            migrationBuilder.DropTable(
-                name: "Province");
 
             migrationBuilder.DropTable(
                 name: "Media");

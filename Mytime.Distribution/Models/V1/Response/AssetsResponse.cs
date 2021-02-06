@@ -29,6 +29,11 @@ namespace Mytime.Distribution.Models.V1.Response
         /// <value></value>
         public int TotalCommission { get; set; }
         /// <summary>
+        /// 回购金额
+        /// </summary>
+        /// <value></value>
+        public int RepurchaseAmount { get; set; }
+        /// <summary>
         /// 更新时间
         /// </summary>
         /// <value></value>

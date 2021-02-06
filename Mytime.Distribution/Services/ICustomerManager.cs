@@ -27,19 +27,30 @@ namespace Mytime.Distribution.Services
         /// <returns></returns>
         Task<Customer> GetUserAsync();
         /// <summary>
-        /// 修改资产
+        /// 修改佣金
         /// </summary>
         /// <param name="customerId">顾客Id</param>
         /// <param name="commission">佣金</param>
-        Task UpdateAssets(int customerId, int commission);
+        Task UpdateCommission(int customerId, int commission);
         /// <summary>
         /// 修改资产
         /// </summary>
         /// <param name="assets"></param>
         /// <param name="amount"></param>
+        /// <param name="repurchase"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        Task UpdateAssets(Assets assets, int amount, string message);
+        Task UpdateAssets(Assets assets, int amount, int repurchase, string message);
+        /// <summary>
+        /// 修改资产
+        /// </summary>
+        /// <param name="assets"></param>
+        /// <param name="commission"></param>
+        /// <param name="amount"></param>
+        /// <param name="repurchase"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        Task UpdateAssets(Assets assets, int commission, int amount, int repurchase, string message);
         /// <summary>
         /// 修改资产
         /// </summary>
@@ -49,5 +60,15 @@ namespace Mytime.Distribution.Services
         /// <param name="message"></param>
         /// <returns></returns>
         Task UpdateAssets(int customerId, int commission, int amount, string message);
+        /// <summary>
+        /// 修改资产
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <param name="commission"></param>
+        /// <param name="amount"></param>
+        /// <param name="repurchase"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        Task UpdateAssets(int customerId, int commission, int amount, int repurchase, string message);
     }
 }

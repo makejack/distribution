@@ -10,8 +10,7 @@ namespace Mytime.Distribution.Domain.Entities
         public int CustomerId { get; set; }
         public virtual Customer Customer { get; set; }
         /// <summary>
-        /// 总资产 
-        /// 总提现金额
+        /// 总资产
         /// </summary>
         /// <value></value>
         public int TotalAssets { get; set; }
@@ -25,6 +24,13 @@ namespace Mytime.Distribution.Domain.Entities
         /// </summary>
         /// <value></value>
         public int TotalCommission { get; set; }
+        /// <summary>
+        /// 回购金额
+        /// 提现的20%用于回购商品
+        /// </summary>
+        /// <value></value>
+        public int RepurchaseAmount { get; set; }
+
         public DateTime UpdateTime { get; set; }
         public DateTime Createat { get; set; }
 

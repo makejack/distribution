@@ -16,7 +16,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 商品选项数据
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Goods")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/goods/optiondata")]

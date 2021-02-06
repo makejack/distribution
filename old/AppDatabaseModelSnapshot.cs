@@ -2,17 +2,15 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mytime.Distribution.EFCore;
 
 namespace Mytime.Distribution.EFCore.Migrations.Migrations
 {
     [DbContext(typeof(AppDatabase))]
-    [Migration("20210130075631_addliteappsetting")]
-    partial class addliteappsetting
+    partial class AppDatabaseModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,6 +147,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RepurchaseAmount")
                         .HasColumnType("int");
 
                     b.Property<int>("TotalAssets")
@@ -1351,6 +1352,10 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("varchar(512) CHARACTER SET utf8mb4")
+                        .HasMaxLength(512);
+
                     b.Property<int>("HandlingFee")
                         .HasColumnType("int");
 
@@ -1367,6 +1372,9 @@ namespace Mytime.Distribution.EFCore.Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
                         .HasMaxLength(32);
+
+                    b.Property<int>("ReservedAmount")
+                        .HasColumnType("int");
 
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint unsigned");

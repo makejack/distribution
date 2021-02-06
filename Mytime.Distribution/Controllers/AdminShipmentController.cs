@@ -24,7 +24,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台装货
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting,Warehouse")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/shipment")]

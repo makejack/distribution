@@ -16,7 +16,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台佣金
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/commission")]

@@ -21,7 +21,7 @@ namespace Mytime.Distribution.Controllers
     /// <summary>
     /// 后台退款管理
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = "Admin,Accounting")]
     [ApiController]
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/admin/refund")]
@@ -187,9 +187,9 @@ namespace Mytime.Distribution.Controllers
         public async Task<Result> ConfirmRefund(int id)
         {
             var returnApply = await _returnApplyRepository.Query()
-            // .Include(e => e.ShipmentOrderItems).ThenInclude(e => e.Shipment)
             .Include(e => e.OrderItem).ThenInclude(e => e.Order)
             .Include(e => e.OrderItem).ThenInclude(e => e.CommissionHistory)
+            .Include(e => e.Shipment).ThenInclude(e => e.ShipmentOrderItems).ThenInclude(e => e.OrderItem)
             .FirstOrDefaultAsync(e => e.Id == id);
             if (returnApply == null) return Result.Fail(ResultCodes.IdInvalid);
 
@@ -200,7 +200,7 @@ namespace Mytime.Distribution.Controllers
                 commission.Status = CommissionStatus.Invalidation;
                 commission.SettlementTime = DateTime.Now;
 
-                await _customerManager.UpdateAssets(commission.CustomerId, -commission.Commission);
+                await _customerManager.UpdateCommission(commission.CustomerId, -commission.Commission);
             }
 
             var order = returnGoods.Order;
@@ -213,6 +213,26 @@ namespace Mytime.Distribution.Controllers
 
             returnGoods.Status = OrderItemStatus.CompleteRefund;
             returnGoods.CompleteTime = DateTime.Now;
+
+            var shipment = returnApply.Shipment;
+            if (shipment.ShippingStatus != ShippingStatus.Complete)
+            {
+                var orderItems = shipment.ShipmentOrderItems.Where(e => e.OrderItemId != returnGoods.Id).Select(e => e.OrderItem);
+                if (orderItems.Count() > 0)
+                {
+                    var count = orderItems.Count(e => e.Status == OrderItemStatus.Shipped);
+                    if (count == 0)
+                    {
+                        shipment.ShippingStatus = ShippingStatus.Complete;
+                        shipment.CompleteTime = DateTime.Now;
+                    }
+                }
+                else
+                {
+                    shipment.ShippingStatus = ShippingStatus.Complete;
+                    shipment.CompleteTime = DateTime.Now;
+                }
+            }
 
             returnApply.Status = ReturnAuditStatus.Completed;
             returnApply.RefundTime = DateTime.Now;
